@@ -22,3 +22,4 @@ app/runs/
 .demo_env/
 .demo_setup_ok
 demo_setup.log
+samples/

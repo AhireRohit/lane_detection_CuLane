@@ -7,7 +7,8 @@ Used two ways, with the same code path:
 Reuses the verified builders from benchmark_speed.py (pre -> forward -> decode, checked against the vendor code),
 the crop adapter (vanishing-point placement, as estimate_vp.py) and the B2 temporal tracker from temporal_ablation.py.
 
-CLI: app_infer.py <job_dir> <model>
+CLI: app_infer.py <job_dir> <model>        (one job, then exit)
+     app_infer.py --serve <model> <work_dir> (persistent worker for the public demo: job dirs on stdin)
   job_dir/request.json: {"input": "input.mp4", "kind": "video"|"image", "adapter": "auto"|"squash", "tracker": bool}
   model: scnn | ufldv2 | clrernet | clrernet_robust  (clrernet_robust = our corruption-fine-tuned checkpoint via CLR_CKPT)
   writes job_dir/out/<model>/{overlay.mp4|overlay.png, lanes.jsonl, summary.json} and job_dir/status_<model>.json.
@@ -158,7 +159,36 @@ def process(model, built, src, kind, adapter, use_tracker, out, set_status=lambd
     return summary
 
 
+def serve(model, work_dir):
+    """Persistent worker for the public demo: build the model once, then take job directories from stdin, one per
+    line. Progress goes to job/status_<model>.json, the outcome to job/done_<model>.json; stdout is only a log."""
+    import traceback
+    built = build(model, work_dir)
+    print('WORKER READY', model, flush=True)
+    for line in sys.stdin:
+        job = Path(line.strip())
+        if not line.strip(): continue
+        status, done = job / f'status_{model}.json', job / f'done_{model}.json'
+        st = dict(model=model, stage='starting', frame=0, total=None, t=time.time())
+
+        def set_status(**k):
+            st.update(k, t=time.time()); write_json(status, st)
+        try:
+            req = json.loads((job / 'request.json').read_text())
+            process(model, built, job / req['input'], req['kind'], req.get('adapter', 'auto'), req.get('tracker'),
+                    job / 'out' / model, set_status)
+            write_json(done, dict(ok=True))
+        except Exception:
+            write_json(done, dict(ok=False, error=traceback.format_exc()[-1500:]))
+        print('WORKER JOB', model, job.name, flush=True)
+
+
 def main():
+    if sys.argv[1] == '--serve':
+        model, work_dir = sys.argv[2], Path(sys.argv[3]).resolve()
+        assert model in NAMES, model
+        work_dir.mkdir(parents=True, exist_ok=True)
+        return serve(model, work_dir)
     job, model = Path(sys.argv[1]).resolve(), sys.argv[2]
     assert model in NAMES, model
     req = json.loads((job / 'request.json').read_text())

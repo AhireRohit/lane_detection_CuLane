@@ -1,0 +1,48 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit:
+    name: Unit tests (metrics, tracker, CPU NMS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          pip install -q https://download.pytorch.org/whl/cpu/torch-2.1.2%2Bcpu-cp311-cp311-linux_x86_64.whl \
+            numpy==1.26.4 scipy==1.13.1 opencv-python-headless==4.10.0.84 pytest
+      - name: Compile all scripts
+        run: python -m py_compile scripts/*.py streamlit_cloud/*.py app/*.py hf_space/app.py
+      - name: Tests
+        run: pytest -q tests
+
+  demo:
+    name: Public demo smoke test (Python 3.14, as on Streamlit Cloud)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: System packages (streamlit_cloud/packages.txt)
+        run: sudo apt-get update -qq && xargs sudo apt-get install -y -qq --no-install-recommends < streamlit_cloud/packages.txt
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .demo_env
+            ~/.local/share/uv/python
+            checkpoints
+          key: demo-${{ hashFiles('streamlit_cloud/model_env.txt', 'streamlit_cloud/build_constraints.txt', 'streamlit_cloud/setup_demo.sh') }}
+      - name: Host requirements
+        run: pip install -q -r streamlit_cloud/requirements.txt
+      - name: Setup + inference + page render
+        working-directory: streamlit_cloud
+        env:
+          LANE_MODELS: clrernet clrernet_robust
+        run: python ci_smoke.py
