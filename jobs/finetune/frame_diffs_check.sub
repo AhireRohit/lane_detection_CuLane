@@ -1,0 +1,16 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /path/to/Lane_Detection/benchmark_culane/.venvs/clrernet/bin/python
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/check_frame_diffs.py
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/finetune/fdcheck.$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/finetune/fdcheck.$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/finetune/fdcheck.$(ClusterId).log
+should_transfer_files = NO
+request_cpus = 1
+request_memory = 2G
+request_disk = 1G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue 1

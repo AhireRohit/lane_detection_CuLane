@@ -1,0 +1,110 @@
+{
+  "scnn": {
+    "thresholds": {
+      "min_extent": 110.0,
+      "max_curv": 55.669499999999616,
+      "max_slope": 6.010000000000007
+    },
+    "val_images": 9675,
+    "pred_lanes": 31817,
+    "tp_lanes": 24859,
+    "fp_lanes": 6958,
+    "approx_val_f1": 0.7708336563357571,
+    "tp_rejection_by_rule": {
+      "extent": 0.002292932137254113,
+      "curv": 0.005028359950118669,
+      "slope": 0.005028359950118669
+    },
+    "fp_rejection_by_rule": {
+      "extent": 0.10663983903420524,
+      "curv": 0.06294912331129635,
+      "slope": 0.012934751365334866
+    },
+    "tp_rejection_any": 0.010619896214650629,
+    "fp_rejection_any": 0.15967231963207817,
+    "crossing_rule_removed": {
+      "tp": 2,
+      "fp": 12
+    },
+    "gt_calibrated_thresholds_for_reference": {
+      "min_extent": 90.0,
+      "max_curv": 14.920950000000037,
+      "max_slope": 7.332999999999993
+    }
+  },
+  "ufldv2": {
+    "thresholds": {
+      "min_extent": 100.0,
+      "max_curv": 98.48435402041073,
+      "max_slope": 6.353836721185988
+    },
+    "val_images": 9675,
+    "pred_lanes": 30535,
+    "tp_lanes": 25313,
+    "fp_lanes": 5222,
+    "approx_val_f1": 0.8008288909628739,
+    "tp_rejection_by_rule": {
+      "extent": 0.004108560818551732,
+      "curv": 0.005017184845731442,
+      "slope": 0.005017184845731442
+    },
+    "fp_rejection_by_rule": {
+      "extent": 0.031214094216775182,
+      "curv": 0.124473381846036,
+      "slope": 0.016468785905783226
+    },
+    "tp_rejection_any": 0.011496069213447636,
+    "fp_rejection_any": 0.1554959785522788,
+    "crossing_rule_removed": {
+      "tp": 13,
+      "fp": 24
+    },
+    "gt_calibrated_thresholds_for_reference": {
+      "min_extent": 90.0,
+      "max_curv": 14.920950000000037,
+      "max_slope": 7.332999999999993
+    }
+  },
+  "clrernet": {
+    "thresholds": {
+      "min_extent": 100.0,
+      "max_curv": 4.6900477070444815,
+      "max_slope": 6.282308999999992
+    },
+    "val_images": 9675,
+    "pred_lanes": 28049,
+    "tp_lanes": 25509,
+    "fp_lanes": 2540,
+    "approx_val_f1": 0.8400652055786995,
+    "tp_rejection_by_rule": {
+      "extent": 0.004116194284370222,
+      "curv": 0.005017836841898938,
+      "slope": 0.005017836841898938
+    },
+    "fp_rejection_by_rule": {
+      "extent": 0.045275590551181105,
+      "curv": 0.01653543307086614,
+      "slope": 0.04212598425196851
+    },
+    "tp_rejection_any": 0.011446940295581952,
+    "fp_rejection_any": 0.06968503937007874,
+    "crossing_rule_removed": {
+      "tp": 0,
+      "fp": 1
+    },
+    "gt_calibrated_thresholds_for_reference": {
+      "min_extent": 90.0,
+      "max_curv": 14.920950000000037,
+      "max_slope": 7.332999999999993
+    }
+  },
+  "method": {
+    "matching": "polyline width 30px at scale 0.5, Hungarian, IoU>=0.5",
+    "percentiles": {
+      "extent_low": 0.5,
+      "curv_high": 99.5,
+      "slope_high": 99.5
+    },
+    "note": "thresholds from TP-lane distributions on CULane VAL predictions; no test labels; no video"
+  }
+}

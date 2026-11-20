@@ -1,0 +1,51 @@
+{
+  "images": 2895,
+  "stride": 12,
+  "severity": {
+    "dark": "brightness x0.6 / x0.4 / x0.25",
+    "motion_blur": "linear kernel 7 / 15 / 25 px, angle U(-45,45) deg",
+    "jpeg": "JPEG quality 30 / 15 / 5",
+    "shadow": "1 / 2 / 3 soft polygon shadows on road, factor 0.6 / 0.5 / 0.4",
+    "rain": "300 / 700 / 1500 streaks (15-35 px, common slant), image x0.85"
+  },
+  "identical_inputs_verified": true,
+  "evaluator": "CULane official C++ (width 30, IoU 0.5)",
+  "summary": {
+    "scnn": {
+      "clean_f1": 69.77093070220991,
+      "mean_corrupted_f1": 56.09266666666668,
+      "mean_relative_f1": 0.8039599999999998,
+      "per_corruption_mean_f1": {
+        "motion_blur": 54.02333333333333,
+        "jpeg": 58.86000000000001,
+        "dark": 67.21666666666668,
+        "rain": 32.156666666666666,
+        "shadow": 68.20666666666666
+      }
+    },
+    "ufldv2": {
+      "clean_f1": 76.00278228611177,
+      "mean_corrupted_f1": 64.42866666666666,
+      "mean_relative_f1": 0.8477133333333333,
+      "per_corruption_mean_f1": {
+        "motion_blur": 59.699999999999996,
+        "jpeg": 66.14333333333333,
+        "dark": 73.09333333333332,
+        "rain": 48.25666666666667,
+        "shadow": 74.95
+      }
+    },
+    "clrernet": {
+      "clean_f1": 81.74423582655496,
+      "mean_corrupted_f1": 72.56466666666667,
+      "mean_relative_f1": 0.8877066666666666,
+      "per_corruption_mean_f1": {
+        "motion_blur": 70.43,
+        "jpeg": 68.77999999999999,
+        "dark": 80.99666666666667,
+        "rain": 61.36666666666667,
+        "shadow": 81.25
+      }
+    }
+  }
+}

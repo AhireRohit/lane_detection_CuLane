@@ -1,0 +1,15 @@
+# data, weights and run outputs are never committed (CULane licence: non-commercial, no redistribution)
+datasets/
+checkpoints/
+*.pth
+*.pt
+results/
+logs/
+vendors/
+.venvs/
+.cache/
+*.mp4
+*.jpg
+*.png
+__pycache__/
+*.pyc

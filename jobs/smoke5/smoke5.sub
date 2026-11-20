@@ -1,0 +1,17 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/gpu_entry.sh $(model) smoke5
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/smoke5/$(model).$(ClusterId).$(ProcId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/smoke5/$(model).$(ClusterId).$(ProcId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/smoke5/smoke5.$(ClusterId).log
+should_transfer_files = NO
+request_GPUs = 1
+request_CPUs = 2
+request_memory = 12G
+request_disk = 4G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue model in (scnn ufldv2 clrernet)

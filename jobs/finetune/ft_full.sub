@@ -1,0 +1,18 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/gpu_entry.sh clrernet finetune
+environment = "FT_CFG=/path/to/Lane_Detection/benchmark_culane/configs_ft/$(cfg).py FT_NAME=$(cfg)"
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/finetune/full_$(cfg).$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/finetune/full_$(cfg).$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/finetune/full.$(ClusterId).log
+should_transfer_files = NO
+request_GPUs = 1
+request_CPUs = 4
+request_memory = 24G
+request_disk = 8G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue cfg in (clrernet_ft_control clrernet_ft_corrupt)

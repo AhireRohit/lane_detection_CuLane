@@ -1,0 +1,41 @@
+model,scenario,test_frames,tp,fp,fn,precision,recall,f1,notes
+scnn,all_test,34680,72721,29964,32165,0.7082,0.6933,70.07,
+scnn,test0_normal,9621,29461,3222,3316,0.9014,0.8988,90.01,
+scnn,test1_crowd,8113,19016,8353,8987,0.6948,0.6791,68.68,
+scnn,test2_hlight,486,932,661,753,0.5851,0.5531,56.86,
+scnn,test3_shadow,930,1750,1075,1126,0.6195,0.6085,61.39,
+scnn,test4_noline,4067,5668,6865,8353,0.4522,0.4043,42.69,
+scnn,test5_arrow,890,2615,451,567,0.8529,0.8218,83.71,
+scnn,test6_curve,422,761,351,551,0.6844,0.58,62.79,
+scnn,test7_cross,3122,0,1926,0,,,N/A,crossroad: FP count only
+scnn,test8_night,7029,12518,7060,8512,0.6394,0.5952,61.65,
+ufldv2,all_test,34680,78397,23067,26489,0.7727,0.7474,75.98,
+ufldv2,test0_normal,9621,30247,2313,2530,0.929,0.9228,92.59,
+ufldv2,test1_crowd,8113,20495,6269,7508,0.7658,0.7319,74.84,
+ufldv2,test2_hlight,486,1064,494,621,0.6829,0.6315,65.62,
+ufldv2,test3_shadow,930,2109,605,767,0.7771,0.7333,75.46,
+ufldv2,test4_noline,4067,6335,5496,7686,0.5355,0.4518,49.01,
+ufldv2,test5_arrow,890,2751,305,431,0.9002,0.8646,88.2,
+ufldv2,test6_curve,422,843,262,469,0.7629,0.6425,69.76,
+ufldv2,test7_cross,3122,0,1851,0,,,N/A,crossroad: FP count only
+ufldv2,test8_night,7029,14553,5472,6477,0.7267,0.692,70.9,
+clrernet,all_test,34680,79864,11110,25022,0.8779,0.7614,81.55,CULane official C++; job 73878
+clrernet,test0_normal,9621,30714,1598,2063,0.9505,0.9371,94.38,CULane official C++; job 73878
+clrernet,test1_crowd,8113,20862,2773,7141,0.8827,0.7450,80.80,CULane official C++; job 73878
+clrernet,test2_hlight,486,1154,226,531,0.8362,0.6849,75.30,CULane official C++; job 73878
+clrernet,test3_shadow,930,2290,251,586,0.9012,0.7962,84.55,CULane official C++; job 73878
+clrernet,test4_noline,4067,6390,2100,7631,0.7527,0.4557,56.77,CULane official C++; job 73878
+clrernet,test5_arrow,890,2821,193,361,0.9360,0.8865,91.06,CULane official C++; job 73878
+clrernet,test6_curve,422,954,153,358,0.8618,0.7271,78.88,CULane official C++; job 73878
+clrernet,test7_cross,3122,0,1335,0,,,N/A (FP only),CULane official C++; job 73878
+clrernet,test8_night,7029,14679,2481,6351,0.8554,0.6980,76.87,CULane official C++; job 73878
+ufldv2_notta,all_test,34680,78275,23205,26611,0.7713,0.7463,75.86,CULane official C++; job 73905; no TTA
+ufldv2_notta,test0_normal,9621,30249,2309,2528,0.9291,0.9229,92.60,CULane official C++; job 73905; no TTA
+ufldv2_notta,test1_crowd,8113,20507,6261,7496,0.7661,0.7323,74.88,CULane official C++; job 73905; no TTA
+ufldv2_notta,test2_hlight,486,1068,488,617,0.6864,0.6338,65.91,CULane official C++; job 73905; no TTA
+ufldv2_notta,test3_shadow,930,2101,614,775,0.7738,0.7305,75.16,CULane official C++; job 73905; no TTA
+ufldv2_notta,test4_noline,4067,6306,5527,7715,0.5329,0.4498,48.78,CULane official C++; job 73905; no TTA
+ufldv2_notta,test5_arrow,890,2749,308,433,0.8992,0.8639,88.12,CULane official C++; job 73905; no TTA
+ufldv2_notta,test6_curve,422,837,267,475,0.7582,0.6380,69.29,CULane official C++; job 73905; no TTA
+ufldv2_notta,test7_cross,3122,0,1856,0,,,N/A (FP only),CULane official C++; job 73905; no TTA
+ufldv2_notta,test8_night,7029,14458,5575,6572,0.7217,0.6875,70.42,CULane official C++; job 73905; no TTA

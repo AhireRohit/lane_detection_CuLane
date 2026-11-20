@@ -1,0 +1,23 @@
+{
+  "dataset": "datasets/CULane (already extracted by user; do not download/copy)",
+  "models": {
+    "scnn": {
+      "repo": "https://github.com/delldu/SCNN.git",
+      "checkpoint_file": "checkpoints/scnn/vgg_SCNN_DULR_w9.pth",
+      "checkpoint_source": "https://drive.google.com/file/d/1bBdN3yhoOQBC9pRtBUxzeRrKJdF7uVTJ/view",
+      "published": "Original SCNN paper ~71.6 CULane F1; converted PyTorch port checkpoint may differ"
+    },
+    "ufldv2": {
+      "repo": "https://github.com/cfzd/Ultra-Fast-Lane-Detection-v2.git",
+      "checkpoint_file": "checkpoints/ufldv2/culane_res34.pth",
+      "checkpoint_source": "https://drive.google.com/file/d/1AjnvAD3qmqt_dGPveZJsLZ1bOyWv62Yj/view",
+      "published": "76.0 CULane F1 (author README)"
+    },
+    "clrernet": {
+      "repo": "https://github.com/hirotomusiker/CLRerNet.git",
+      "checkpoint_file": "checkpoints/clrernet/clrernet_culane_dla34_ema.pth",
+      "checkpoint_source": "https://github.com/hirotomusiker/CLRerNet/releases/download/v0.1.0/clrernet_culane_dla34_ema.pth",
+      "published": "81.55 CULane F1 of released EMA checkpoint (author README)"
+    }
+  }
+}

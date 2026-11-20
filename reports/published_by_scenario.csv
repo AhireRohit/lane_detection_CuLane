@@ -1,0 +1,5 @@
+model,source_row,total_f1,normal,crowded,dazzle_hlight,shadow,noline,arrow,curve,cross_fp,night,source,notes
+scnn,Baseline+SCNN,71.6,90.6,69.7,58.5,66.9,43.4,84.1,64.4,1990,66.1,"arXiv 1712.06080 v2 Table 5 (IoU 0.5)",matches released checkpoint lineage (original Torch7 SCNN); our checkpoint is a PyTorch conversion
+ufldv2,UFLDv2(ResNet-34),75.9,92.5,74.9,65.7,75.3,49.0,88.5,70.2,1864,70.6,"arXiv 2206.07389 Table 7 (IoU 0.5)",no test-time augmentation; compare with our no-TTA run
+ufldv2,UFLDv2(ResNet-34)*,76.0,92.5,74.8,65.5,75.5,49.2,88.8,70.1,1910,70.8,"arXiv 2206.07389 Table 7 (IoU 0.5)","* = feature-level test-time augmentation; matches README 76.0; compare with our TTA run (75.98)"
+clrernet,CLRerNet DLA34 (60 ep + EMA),81.43,94.36,80.62,75.23,84.35,57.31,91.17,79.11,1540,76.92,"arXiv 2305.08366 Table 2 (F1@50)","MEAN OF 5 SEEDS (+-0.14), not the released checkpoint; README: released EMA checkpoint scores 81.55 overall, its per-scenario values are not published"

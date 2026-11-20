@@ -1,0 +1,10 @@
+# Fine-tune evaluation DAG: each EVAL node waits (PRE script on the access point) for its epoch_3.pth.
+JOB EVAL_CTRL /path/to/Lane_Detection/benchmark_culane/jobs/ft_dag/eval.sub
+VARS EVAL_CTRL run="/path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_control_20261119T181813Z_<cluster-user>-73992" tag="clrernet_ft_control"
+SCRIPT PRE EVAL_CTRL /path/to/Lane_Detection/benchmark_culane/scripts/wait_for_file.sh /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_control_20261119T181813Z_<cluster-user>-73992/epoch_3.pth 12
+JOB EVAL_CORR /path/to/Lane_Detection/benchmark_culane/jobs/ft_dag/eval.sub
+VARS EVAL_CORR run="/path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_corrupt_20261119T181814Z_<cluster-user>-73992" tag="clrernet_ft_corrupt"
+SCRIPT PRE EVAL_CORR /path/to/Lane_Detection/benchmark_culane/scripts/wait_for_file.sh /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_corrupt_20261119T181814Z_<cluster-user>-73992/epoch_3.pth 12
+JOB SCORE /path/to/Lane_Detection/benchmark_culane/jobs/ft_dag/score.sub
+PARENT EVAL_CTRL EVAL_CORR CHILD SCORE
+RETRY SCORE 1

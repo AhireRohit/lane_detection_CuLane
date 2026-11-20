@@ -1,0 +1,18 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/gpu_entry.sh clrernet finetune
+environment = "FT_CFG=/path/to/Lane_Detection/benchmark_culane/configs_ft/$(cfg).py FT_NAME=smoke_$(cfg) FT_OPTS='train_cfg.max_epochs=1 train_cfg.val_interval=99 train_dataloader.dataset.data_list=/path/to/Lane_Detection/benchmark_culane/data_aux/train_gt_smoke.txt train_dataloader.dataset.diff_file=None default_hooks.logger.interval=2'"
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/finetune/smoke_$(cfg).$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/finetune/smoke_$(cfg).$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/finetune/smoke.$(ClusterId).log
+should_transfer_files = NO
+request_GPUs = 1
+request_CPUs = 4
+request_memory = 24G
+request_disk = 8G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue cfg in (clrernet_ft_control clrernet_ft_corrupt)

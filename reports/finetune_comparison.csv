@@ -1,0 +1,13 @@
+metric,set,original_clrernet,ft_control,ft_corrupt,source
+test_f1,CULane test full (34680 imgs),81.55,81.30,81.18,results/<model>/official_eval/*/official_eval.json
+test3_shadow_f1,CULane test shadow scenario,84.55,83.72,83.19,results/<model>/official_eval/*/official_eval.json
+test8_night_f1,CULane test night scenario,76.87,76.37,76.54,results/<model>/official_eval/*/official_eval.json
+clean_f1,robustness subset (2895 imgs),81.74,81.15,81.05,reports/robustness_summary.json
+mean_corrupted_f1,robustness subset 15 conditions,72.56,70.21,77.33,reports/robustness_summary.json
+retained_share,robustness subset 15 conditions,0.888,0.865,0.954,reports/robustness_summary.json
+rain_mean_f1,robustness subset (3 severities),61.37,56.03,78.88,reports/robustness_summary.json
+jpeg_mean_f1,robustness subset (3 severities),68.78,65.29,74.35,reports/robustness_summary.json
+motion_blur_mean_f1,robustness subset (3 severities),70.43,68.43,72.01,reports/robustness_summary.json
+dark_mean_f1,robustness subset (3 severities),81.00,80.51,80.70,reports/robustness_summary.json
+shadow_mean_f1_heldout,robustness subset (3 severities; not in training aug),81.25,80.77,80.73,reports/robustness_summary.json
+val_f1_epoch3,CULane val (monitoring only; no selection),,82.47,81.83,results/finetune/*-73992/*/*.log

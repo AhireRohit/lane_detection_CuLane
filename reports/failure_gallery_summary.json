@@ -1,0 +1,257 @@
+{
+  "test0_normal": {
+    "scnn": {
+      "tp": 29936,
+      "fp": 2747,
+      "fn": 2841,
+      "f1_approx": 91.46
+    },
+    "ufldv2": {
+      "tp": 30485,
+      "fp": 2075,
+      "fn": 2292,
+      "f1_approx": 93.32
+    },
+    "clrernet": {
+      "tp": 30939,
+      "fp": 1373,
+      "fn": 1838,
+      "f1_approx": 95.07
+    },
+    "gallery_images": [
+      "driver_193_90frame/06051317_0673.MP4/04500.jpg",
+      "driver_100_30frame/05251739_0476.MP4/03540.jpg",
+      "driver_100_30frame/05251739_0476.MP4/03690.jpg",
+      "driver_100_30frame/05251739_0476.MP4/03780.jpg"
+    ]
+  },
+  "test1_crowd": {
+    "scnn": {
+      "tp": 19709,
+      "fp": 7660,
+      "fn": 8294,
+      "f1_approx": 71.19
+    },
+    "ufldv2": {
+      "tp": 20919,
+      "fp": 5845,
+      "fn": 7084,
+      "f1_approx": 76.39
+    },
+    "clrernet": {
+      "tp": 21164,
+      "fp": 2471,
+      "fn": 6839,
+      "f1_approx": 81.97
+    },
+    "gallery_images": [
+      "driver_193_90frame/06051544_0722.MP4/00810.jpg",
+      "driver_193_90frame/06061034_0845.MP4/04230.jpg",
+      "driver_100_30frame/05251204_0379.MP4/03510.jpg",
+      "driver_193_90frame/06060754_0792.MP4/01620.jpg"
+    ]
+  },
+  "test2_hlight": {
+    "scnn": {
+      "tp": 989,
+      "fp": 604,
+      "fn": 696,
+      "f1_approx": 60.34
+    },
+    "ufldv2": {
+      "tp": 1095,
+      "fp": 463,
+      "fn": 590,
+      "f1_approx": 67.53
+    },
+    "clrernet": {
+      "tp": 1176,
+      "fp": 204,
+      "fn": 509,
+      "f1_approx": 76.74
+    },
+    "gallery_images": [
+      "driver_100_30frame/05251408_0410.MP4/01110.jpg",
+      "driver_100_30frame/05251408_0410.MP4/00960.jpg",
+      "driver_37_30frame/05181432_0203.MP4/04740.jpg",
+      "driver_37_30frame/05181656_0251.MP4/01350.jpg"
+    ]
+  },
+  "test3_shadow": {
+    "scnn": {
+      "tp": 1929,
+      "fp": 896,
+      "fn": 947,
+      "f1_approx": 67.67
+    },
+    "ufldv2": {
+      "tp": 2141,
+      "fp": 573,
+      "fn": 735,
+      "f1_approx": 76.6
+    },
+    "clrernet": {
+      "tp": 2312,
+      "fp": 229,
+      "fn": 564,
+      "f1_approx": 85.36
+    },
+    "gallery_images": [
+      "driver_193_90frame/06051535_0719.MP4/04500.jpg",
+      "driver_193_90frame/06051438_0700.MP4/04230.jpg",
+      "driver_193_90frame/06061046_0849.MP4/04770.jpg",
+      "driver_193_90frame/06051402_0688.MP4/03960.jpg"
+    ]
+  },
+  "test4_noline": {
+    "scnn": {
+      "tp": 6010,
+      "fp": 6523,
+      "fn": 8011,
+      "f1_approx": 45.27
+    },
+    "ufldv2": {
+      "tp": 6563,
+      "fp": 5268,
+      "fn": 7458,
+      "f1_approx": 50.77
+    },
+    "clrernet": {
+      "tp": 6533,
+      "fp": 1957,
+      "fn": 7488,
+      "f1_approx": 58.04
+    },
+    "gallery_images": [
+      "driver_100_30frame/05251754_0481.MP4/04110.jpg",
+      "driver_193_90frame/06051551_0723.MP4/00990.jpg",
+      "driver_193_90frame/06051551_0723.MP4/01080.jpg",
+      "driver_193_90frame/06051557_0725.MP4/04320.jpg"
+    ]
+  },
+  "test5_arrow": {
+    "scnn": {
+      "tp": 2677,
+      "fp": 389,
+      "fn": 505,
+      "f1_approx": 85.69
+    },
+    "ufldv2": {
+      "tp": 2779,
+      "fp": 277,
+      "fn": 403,
+      "f1_approx": 89.1
+    },
+    "clrernet": {
+      "tp": 2849,
+      "fp": 165,
+      "fn": 333,
+      "f1_approx": 91.96
+    },
+    "gallery_images": [
+      "driver_193_90frame/06051652_0743.MP4/04680.jpg",
+      "driver_100_30frame/05251312_0398.MP4/00450.jpg",
+      "driver_193_90frame/06051551_0723.MP4/01710.jpg",
+      "driver_193_90frame/06051108_0630.MP4/01260.jpg"
+    ]
+  },
+  "test6_curve": {
+    "scnn": {
+      "tp": 790,
+      "fp": 322,
+      "fn": 522,
+      "f1_approx": 65.18
+    },
+    "ufldv2": {
+      "tp": 866,
+      "fp": 239,
+      "fn": 446,
+      "f1_approx": 71.66
+    },
+    "clrernet": {
+      "tp": 981,
+      "fp": 126,
+      "fn": 331,
+      "f1_approx": 81.11
+    },
+    "gallery_images": [
+      "driver_193_90frame/06051126_0636.MP4/05040.jpg",
+      "driver_193_90frame/06051250_0664.MP4/01440.jpg",
+      "driver_100_30frame/05250437_0296.MP4/00090.jpg",
+      "driver_100_30frame/05251110_0361.MP4/00960.jpg"
+    ]
+  },
+  "test7_cross": {
+    "scnn": {
+      "tp": 0,
+      "fp": 1926,
+      "fn": 0,
+      "f1_approx": 0.0
+    },
+    "ufldv2": {
+      "tp": 0,
+      "fp": 1851,
+      "fn": 0,
+      "f1_approx": 0.0
+    },
+    "clrernet": {
+      "tp": 0,
+      "fp": 1335,
+      "fn": 0,
+      "f1_approx": 0.0
+    },
+    "gallery_images": [
+      "driver_100_30frame/05251931_0494.MP4/01590.jpg",
+      "driver_100_30frame/05250455_0302.MP4/02700.jpg",
+      "driver_100_30frame/05251444_0422.MP4/00480.jpg",
+      "driver_100_30frame/05251444_0422.MP4/00510.jpg"
+    ]
+  },
+  "test8_night": {
+    "scnn": {
+      "tp": 13089,
+      "fp": 6489,
+      "fn": 7941,
+      "f1_approx": 64.47
+    },
+    "ufldv2": {
+      "tp": 14915,
+      "fp": 5110,
+      "fn": 6115,
+      "f1_approx": 72.66
+    },
+    "clrernet": {
+      "tp": 14886,
+      "fp": 2274,
+      "fn": 6144,
+      "f1_approx": 77.96
+    },
+    "gallery_images": [
+      "driver_100_30frame/05260052_0578.MP4/00690.jpg",
+      "driver_100_30frame/05252304_0547.MP4/02700.jpg",
+      "driver_100_30frame/05260052_0578.MP4/00660.jpg",
+      "driver_100_30frame/05250358_0283.MP4/02550.jpg"
+    ]
+  },
+  "all_test": {
+    "scnn": {
+      "tp": 75129,
+      "fp": 27556,
+      "fn": 29757,
+      "f1_approx": 72.39
+    },
+    "ufldv2": {
+      "tp": 79763,
+      "fp": 21701,
+      "fn": 25123,
+      "f1_approx": 77.31
+    },
+    "clrernet": {
+      "tp": 80840,
+      "fp": 10134,
+      "fn": 24046,
+      "f1_approx": 82.55
+    }
+  },
+  "note": "approximate matcher (half-res polylines); compare all_test with reports/culane_by_scenario.csv (official C++)"
+}

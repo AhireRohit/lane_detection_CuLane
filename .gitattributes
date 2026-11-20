@@ -1,0 +1,2 @@
+# Keep LF line endings everywhere: the scripts run on Linux cluster nodes.
+* text=auto eol=lf

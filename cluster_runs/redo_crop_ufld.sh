@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Rerun UFLDv2 crop-adapter dashcam (argv bug fix), then the 3-model comparison and B0-B3 ablation on the crop batch.
+set -euo pipefail
+export DASH_VIDEO=/path/to/Lane_Detection/benchmark_culane/vendors/ufldv2/example.mp4 DASH_CROP=/path/to/Lane_Detection/benchmark_culane/results/adapter_v2/crop_calibration.json DASH_BATCH=run_20261119T154149Z_<cluster-user>-73901_crop
+bash /path/to/Lane_Detection/benchmark_culane/scripts/gpu_entry.sh ufldv2 dashcam
+grep -q '"adapter": "crop rows' /path/to/Lane_Detection/benchmark_culane/results/dashcam/ufldv2/run_20261119T154149Z_<cluster-user>-73901_crop/report.json || { echo "FAIL: UFLDv2 still not cropped" >&2; exit 20; }
+/path/to/Lane_Detection/benchmark_culane/.venvs/scnn/bin/python /path/to/Lane_Detection/benchmark_culane/scripts/dashcam_compare.py /path/to/Lane_Detection/benchmark_culane/results/comparison/run_20261119T154149Z_<cluster-user>-73901_crop_v2 /path/to/Lane_Detection/benchmark_culane/results/dashcam/scnn/run_20261119T154149Z_<cluster-user>-73901_crop /path/to/Lane_Detection/benchmark_culane/results/dashcam/ufldv2/run_20261119T154149Z_<cluster-user>-73901_crop /path/to/Lane_Detection/benchmark_culane/results/dashcam/clrernet/run_20261119T154149Z_<cluster-user>-73901_crop
+/path/to/Lane_Detection/benchmark_culane/.venvs/scnn/bin/python /path/to/Lane_Detection/benchmark_culane/scripts/temporal_ablation.py run_20261119T154149Z_<cluster-user>-73901_crop /path/to/Lane_Detection/benchmark_culane/results/ablation/temporal_crop_v2_$1 /path/to/Lane_Detection/benchmark_culane/results/b1_recal/valpred_20261119T145622Z/b1_calibration_pred.json

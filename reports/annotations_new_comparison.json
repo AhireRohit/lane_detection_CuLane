@@ -1,0 +1,29 @@
+{
+  "annotations_new": "CULane/annotations_new",
+  "per_driver": {
+    "driver_161_90frame": {
+      "identical": {
+        "train": 18233
+      }
+    },
+    "driver_182_30frame": {
+      "identical": {
+        "train": 17790
+      }
+    },
+    "driver_23_30frame": {
+      "identical": {
+        "train": 52857,
+        "val": 9675
+      }
+    }
+  },
+  "totals": {
+    "identical": {
+      "train": 88880,
+      "val": 9675
+    }
+  },
+  "different_examples": [],
+  "note": "byte comparison only; no file was modified. Training/eval in this project used the dataset-root labels."
+}
