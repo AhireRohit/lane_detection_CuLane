@@ -1,9 +1,13 @@
-# Streamlit Community Cloud, Python 3.10 (choose it under "Advanced settings" when deploying).
+# Streamlit Community Cloud: choose Python 3.10 or 3.11 under "Advanced settings" when deploying
+# (the default, 3.12+, has no torch 2.1.2 / MMCV 2.1.0 wheels).
 # Same CPU environment as the verified Space (hf_space/requirements.txt, hf_space/VERIFICATION.md); torch and MMCV are
 # pinned to exact wheel URLs so no package index can substitute another build.
-torch @ https://download.pytorch.org/whl/cpu/torch-2.1.2%2Bcpu-cp310-cp310-linux_x86_64.whl
-torchvision @ https://download.pytorch.org/whl/cpu/torchvision-0.16.2%2Bcpu-cp310-cp310-linux_x86_64.whl
-mmcv @ https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/mmcv-2.1.0-cp310-cp310-manylinux1_x86_64.whl
+torch @ https://download.pytorch.org/whl/cpu/torch-2.1.2%2Bcpu-cp310-cp310-linux_x86_64.whl ; python_version == "3.10"
+torch @ https://download.pytorch.org/whl/cpu/torch-2.1.2%2Bcpu-cp311-cp311-linux_x86_64.whl ; python_version == "3.11"
+torchvision @ https://download.pytorch.org/whl/cpu/torchvision-0.16.2%2Bcpu-cp310-cp310-linux_x86_64.whl ; python_version == "3.10"
+torchvision @ https://download.pytorch.org/whl/cpu/torchvision-0.16.2%2Bcpu-cp311-cp311-linux_x86_64.whl ; python_version == "3.11"
+mmcv @ https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/mmcv-2.1.0-cp310-cp310-manylinux1_x86_64.whl ; python_version == "3.10"
+mmcv @ https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/mmcv-2.1.0-cp311-cp311-manylinux1_x86_64.whl ; python_version == "3.11"
 mmengine==0.10.4
 mmdet==3.3.0
 numpy==1.26.4
