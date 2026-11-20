@@ -1,0 +1,19 @@
+# Overnight fine-tune round (training cluster 74187): evaluate each run, then score all in parallel.
+JOB EVAL_BROAD /path/to/Lane_Detection/benchmark_culane/jobs/ft_dag2/eval2.sub
+VARS EVAL_BROAD run="/path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_broad_20261120T010825Z_<cluster-user>-74187" tag="clrernet_ft_broad"
+SCRIPT PRE EVAL_BROAD /path/to/Lane_Detection/benchmark_culane/scripts/wait_for_file.sh /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_broad_20261120T010825Z_<cluster-user>-74187/epoch_3.pth 14
+JOB EVAL_CONTROL_S1 /path/to/Lane_Detection/benchmark_culane/jobs/ft_dag2/eval2.sub
+VARS EVAL_CONTROL_S1 run="/path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_control_s1_20261120T010825Z_<cluster-user>-74187" tag="clrernet_ft_control_s1"
+SCRIPT PRE EVAL_CONTROL_S1 /path/to/Lane_Detection/benchmark_culane/scripts/wait_for_file.sh /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_control_s1_20261120T010825Z_<cluster-user>-74187/epoch_3.pth 14
+JOB EVAL_CONTROL_S2 /path/to/Lane_Detection/benchmark_culane/jobs/ft_dag2/eval2.sub
+VARS EVAL_CONTROL_S2 run="/path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_control_s2_20261120T010825Z_<cluster-user>-74187" tag="clrernet_ft_control_s2"
+SCRIPT PRE EVAL_CONTROL_S2 /path/to/Lane_Detection/benchmark_culane/scripts/wait_for_file.sh /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_control_s2_20261120T010825Z_<cluster-user>-74187/epoch_3.pth 14
+JOB EVAL_CORRUPT_S1 /path/to/Lane_Detection/benchmark_culane/jobs/ft_dag2/eval2.sub
+VARS EVAL_CORRUPT_S1 run="/path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_corrupt_s1_20261120T010825Z_<cluster-user>-74187" tag="clrernet_ft_corrupt_s1"
+SCRIPT PRE EVAL_CORRUPT_S1 /path/to/Lane_Detection/benchmark_culane/scripts/wait_for_file.sh /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_corrupt_s1_20261120T010825Z_<cluster-user>-74187/epoch_3.pth 14
+JOB EVAL_CORRUPT_S2 /path/to/Lane_Detection/benchmark_culane/jobs/ft_dag2/eval2.sub
+VARS EVAL_CORRUPT_S2 run="/path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_corrupt_s2_20261120T010825Z_<cluster-user>-74187" tag="clrernet_ft_corrupt_s2"
+SCRIPT PRE EVAL_CORRUPT_S2 /path/to/Lane_Detection/benchmark_culane/scripts/wait_for_file.sh /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_corrupt_s2_20261120T010825Z_<cluster-user>-74187/epoch_3.pth 14
+JOB SCORE2 /path/to/Lane_Detection/benchmark_culane/jobs/ft_dag2/score2.sub
+PARENT EVAL_BROAD EVAL_CONTROL_S1 EVAL_CONTROL_S2 EVAL_CORRUPT_S1 EVAL_CORRUPT_S2 CHILD SCORE2
+RETRY SCORE2 1

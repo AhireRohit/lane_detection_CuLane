@@ -1,5 +1,3 @@
-<!-- DRAFT: rewrite this README in your own words before publishing. Every number below comes from reports/. -->
-
 # CULane Lane-Detection Benchmark & Robustness Study
 
 A reproducible benchmark of three **pretrained** lane detectors on the full CULane test set, run on an HTCondor GPU cluster. It covers:
@@ -102,29 +100,33 @@ cp app/settings.example.json app/settings.json   # fill in your login and the re
 streamlit run app/streamlit_app.py
 ```
 
+On Windows, double-click `app\run_app.bat` instead: it starts the app and opens it in your browser.
+
 Uploaded media have no labels, so the app shows detections and stability statistics, not accuracy.
 
 ## Repository layout
 
 | Path | Contents |
 |---|---|
-| `scripts/` | evaluation, speed, robustness, dashcam, ablation, calibration and helper scripts |
+| `scripts/` | evaluation, speed, robustness, dashcam, ablation, calibration, fine-tune and helper scripts |
 | `config/`, `configs_ft/` | UFLDv2 test configs and CLRerNet fine-tuning configs |
 | `jobs/` | HTCondor submit-file templates and the fine-tune evaluation DAG |
 | `reports/` | result tables (CSV/JSON) and the full report |
 | `patches/` | notes on every environment fix and correction, with evidence |
-| `cluster_runs/` | one-off rerun wrappers kept for provenance |
 | `app/` | Streamlit demo app and its cluster backend |
 
 ## Reproducing
 
-1. Clone the three model repos at the commits above into `benchmark_culane/vendors/{scnn,ufldv2,clrernet}`.
-2. Download the checkpoints into `benchmark_culane/checkpoints/`. Links are in `config/sources.json`; checksums are in `reports/environment_manifest.json`.
-3. Obtain CULane from its official source; its licence is non-commercial. Place it at `datasets/CULane/`.
-4. Set the paths: `./setup_paths.sh /absolute/path/to/Lane_Detection`.
-5. Submit jobs from `jobs/`. For example, `condor_submit jobs/smoke5/smoke5.sub` runs a 5-image smoke test for all three models. The fine-tune runs through `jobs/finetune/` (frame differences, then `ft_full.sub`) and `jobs/ft_dag/ft_eval.dag` (evaluation and scoring). Each fine-tune takes about 3.6 h on a P100. The run directory names in `ft_eval.dag` are from the original run, so edit them to point at yours.
+**[REPRODUCE.md](REPRODUCE.md)** goes step by step from a fresh clone to every number in the report, with commands, run times and expected values. In short:
 
-Environment: `pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel`, one venv per model. CLRerNet uses MMDetection 3.3.0 and MMCV 2.1.0, built for sm_60.
+```bash
+./setup_paths.sh /absolute/path/to/Lane_Detection   # this repo sits in Lane_Detection/benchmark_culane, CULane in Lane_Detection/datasets/CULane
+bash scripts/bootstrap.sh                          # model repos at the pinned commits (checked), dataset link, dataset audit
+bash scripts/download_weights.sh                   # author checkpoints, verified against config/checkpoints.sha256
+condor_submit jobs/smoke5/smoke5.sub               # 5-image smoke test for all three models, then see REPRODUCE.md
+```
+
+Environment: `pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel` with one venv per model, built by `scripts/gpu_entry.sh` on the first GPU job. CLRerNet uses MMDetection 3.3.0 and MMCV 2.1.0, compiled for the GPU in the job (sm_60 on the P100s used here). The exact package versions are in `reports/environment_manifest.json`.
 
 ## Not included
 

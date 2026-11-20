@@ -24,4 +24,6 @@ else
   --output "$CLR.part" && mv "$CLR.part" "$CLR" || { echo 'BLOCKED clrernet GitHub release' >&2; rm -f "$CLR.part"; }
 fi
 for f in "$B"/checkpoints/*/*; do [[ -f "$f" ]] && sha256sum "$f"; done | tee "$B/results/checkpoint_sha256.txt"
+# Verify against the exact checkpoints used for every result in reports/ (config/checkpoints.sha256).
+(cd "$B" && sha256sum -c config/checkpoints.sha256) || { echo 'CHECKSUM MISMATCH: these are not the checkpoints used in reports/' >&2; exit 3; }
 echo 'If Google Drive says quota exceeded, do NOT train from random weights. Put author checkpoints at exact paths above.'

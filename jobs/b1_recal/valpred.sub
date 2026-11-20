@@ -1,0 +1,18 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/gpu_entry.sh $(model) valpred
+environment = "VALPRED_ROOT=/path/to/Lane_Detection/benchmark_culane/results/b1_recal/valpred_20261119T145622Z"
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/b1_recal/valpred_$(model).$(ClusterId).$(ProcId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/b1_recal/valpred_$(model).$(ClusterId).$(ProcId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/b1_recal/valpred.$(ClusterId).log
+should_transfer_files = NO
+request_GPUs = 1
+request_CPUs = 4
+request_memory = 16G
+request_disk = 4G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue model in (scnn ufldv2 clrernet)

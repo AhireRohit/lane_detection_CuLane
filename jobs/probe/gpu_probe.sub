@@ -1,0 +1,17 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/gpu_probe.sh
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/probe/probe_$(gpu).$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/probe/probe_$(gpu).$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/probe/probe.$(ClusterId).log
+should_transfer_files = NO
+request_GPUs = 1
+request_CPUs = 1
+request_memory = 2G
+request_disk = 1G
+requirements = UidDomain == "cs.uni-saarland.de" && regexp("$(gpu)", GPUs_DeviceName)
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue gpu in (A100-SXM4-80GB A100-PCIE-40GB H200 RTX)

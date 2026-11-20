@@ -1,0 +1,17 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /path/to/Lane_Detection/benchmark_culane/.venvs/scnn/bin/python
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/b1_rule_breakdown.py run_20261119T144052Z_<cluster-user>-73882 /path/to/Lane_Detection/benchmark_culane/results/ablation/temporal_73883
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/ablation/b1diag.$(ClusterId).$(ProcId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/ablation/b1diag.$(ClusterId).$(ProcId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/ablation/b1diag.$(ClusterId).log
+environment = "OMP_NUM_THREADS=2"
+should_transfer_files = NO
+request_cpus = 2
+request_memory = 6G
+request_disk = 4G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue 1

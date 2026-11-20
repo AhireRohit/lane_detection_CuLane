@@ -1,0 +1,21 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/jobs/ufld_eval_cpu/run.sh
+initialdir = /path/to/Lane_Detection/benchmark_culane/jobs/ufld_eval_cpu
+
+output = eval.out
+error = eval.err
+log = eval.log
+
+request_cpus = 2
+request_memory = 4GB
+request_disk = 2GB
+
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+
+should_transfer_files = NO
+queue 1

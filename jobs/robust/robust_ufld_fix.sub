@@ -1,0 +1,23 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/gpu_entry.sh $(model) robust
+environment = "ROBUST_ROOT=/path/to/Lane_Detection/benchmark_culane/results/robustness/full_20261119T154132Z ROBUST_CONDS=$(conds) ROBUST_TAG=$(tag)"
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/robust/ufldfix_$(model)_$(tag).$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/robust/ufldfix_$(model)_$(tag).$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/robust/ufldfix.$(ClusterId).log
+should_transfer_files = NO
+request_GPUs = 1
+request_CPUs = 4
+request_memory = 16G
+request_disk = 8G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue model, conds, tag from (
+  ufldv2, clean;dark_s1;dark_s2;dark_s3, f1
+  ufldv2, motion_blur_s1;motion_blur_s2;motion_blur_s3;jpeg_s1, f2
+  ufldv2, jpeg_s2;jpeg_s3;shadow_s1;shadow_s2, f3
+  ufldv2, shadow_s3;rain_s1;rain_s2;rain_s3, f4
+)

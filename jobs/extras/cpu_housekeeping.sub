@@ -1,0 +1,16 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/housekeeping.sh
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/extras/housekeeping.$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/extras/housekeeping.$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/extras/housekeeping.$(ClusterId).log
+should_transfer_files = NO
+request_cpus = 2
+request_memory = 4G
+request_disk = 2G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue 1

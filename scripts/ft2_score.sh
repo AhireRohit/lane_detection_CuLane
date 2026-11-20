@@ -16,6 +16,7 @@ for r in "$@"; do
 done
 for p in "${pids[@]}"; do wait $p || rc=1; done
 for r in "$@"; do grep -h 'all_test' "$r/eval/official_score.log" | tail -1 | sed "s#^#$(basename $r): #"; tail -1 "$r/eval/robust_score.log"; done
-M=scnn,ufldv2,clrernet,clrernet_ft_control,clrernet_ft_corrupt$(printf ',%s' "${tags[@]}")
+# every model that has a robustness dir (baselines + all fine-tunes so far), deduplicated
+M=$( { printf '%s\n' scnn ufldv2 clrernet; ls -1d $R/clrernet_ft_*/ 2>/dev/null | xargs -n1 basename; printf '%s\n' "${tags[@]}"; } | awk '!s[$0]++' | paste -sd, )
 cd $B/scripts && $PY score_robustness.py $R --models $M || rc=1
 echo FT2_SCORE_RC=$rc; exit $rc

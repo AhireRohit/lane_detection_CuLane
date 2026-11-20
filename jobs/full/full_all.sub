@@ -1,0 +1,18 @@
+# Full CULane test inference for all three models (one GPU job each). Canonical version of jobs/pretrained_*/<model>_full.sub.
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/gpu_entry.sh $(model) full
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/$(model)_full.$(ClusterId).$(ProcId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/$(model)_full.$(ClusterId).$(ProcId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/$(model)_full.$(ClusterId).log
+should_transfer_files = NO
+request_GPUs = 1
+request_CPUs = 4
+request_memory = 16G
+request_disk = 8G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue model in (scnn ufldv2 clrernet)

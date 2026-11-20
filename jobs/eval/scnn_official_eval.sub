@@ -1,0 +1,17 @@
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/score_culane_official.sh scnn /path/to/Lane_Detection/benchmark_culane/results/scnn/full/coord_output
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/eval/scnn_official_eval.$(ClusterId).$(ProcId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/eval/scnn_official_eval.$(ClusterId).$(ProcId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/eval/scnn_official_eval.$(ClusterId).log
+environment = "OMP_NUM_THREADS=4"
+should_transfer_files = NO
+request_cpus = 4
+request_memory = 4G
+request_disk = 2G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue 1

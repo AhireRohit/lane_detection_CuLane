@@ -16,7 +16,7 @@ from scipy.optimize import linear_sum_assignment
 
 B = Path(__file__).resolve().parents[1]; D = B.parent / 'datasets/CULane'
 PRED = dict(scnn=B / 'results/scnn/full/coord_output', ufldv2=B / 'results/ufldv2/full/culane_eval_tmp',
-            clrernet=Path(sorted(glob.glob(str(B / 'results/clrernet/full/run_*73864/pred')))[0]))
+            clrernet=Path(sorted(glob.glob(str(B / 'results/clrernet/full/run_*/pred')))[-1]))   # newest CLRerNet full run (original: job 73864)
 SCEN = ['test0_normal', 'test1_crowd', 'test2_hlight', 'test3_shadow', 'test4_noline', 'test5_arrow', 'test6_curve', 'test7_cross', 'test8_night']
 S = 0.5; HW = (295, 820)
 
