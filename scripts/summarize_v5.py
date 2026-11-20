@@ -18,12 +18,20 @@ def culane_f1(path):
     try: t = open(path).read()
     except OSError: return None
     m = re.search(r'Fmeasure: ([\d.]+)', t)
-    return round(100 * float(m.group(1)), 2) if m else None
+    if m: return round(100 * float(m.group(1)), 2)
+    return 0.0 if re.search(r'tp: 0 ', t) else None   # the evaluator prints nan when there is no true positive
 
 
 def newest(pattern):
     c = sorted(glob.glob(str(pattern)))
     return c[-1] if c else None
+
+
+def _ck(c):
+    """Run-folder name of a checkpoint path, with the cluster account name replaced (public tables)."""
+    name = c.split('/')[-2] if '/' in c else c
+    user = os.environ.get('USER', '')
+    return name.replace(user, '<cluster-user>') if user else name
 
 
 def tusimple():
@@ -35,7 +43,7 @@ def tusimple():
                              fp_rate=round(100 * m['fp_rate'], 2), fn_rate=round(100 * m['fn_rate'], 2),
                              f1=round(100 * m['f1'], 2), f1_ci95_low=round(100 * m['ci95']['f1'][0], 2),
                              f1_ci95_high=round(100 * m['ci95']['f1'][1], 2),
-                             culane_style_f1=culane_f1(d.parent / f'culane_eval_{v}.txt'), checkpoint=r['checkpoint'].split('/')[-2] if '/' in r['checkpoint'] else r['checkpoint']))
+                             culane_style_f1=culane_f1(d.parent / f'culane_eval_{v}.txt'), checkpoint=_ck(r['checkpoint'])))
     return rows
 
 

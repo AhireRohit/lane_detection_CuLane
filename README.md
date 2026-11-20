@@ -1,6 +1,9 @@
 # CULane Lane-Detection Benchmark & Robustness Study
 
-**[Live demo](https://lanedetectionculane.streamlit.app/)**: upload a dashcam image or short video and run CLRerNet (pretrained or our robust fine-tune), UFLDv2 or SCNN on free CPU, in the browser. The first visit after a restart takes a few minutes to set up. Code: [`streamlit_cloud/`](streamlit_cloud/).
+[![CI](https://github.com/AhireRohit/lane_detection_CuLane/actions/workflows/ci.yml/badge.svg)](https://github.com/AhireRohit/lane_detection_CuLane/actions/workflows/ci.yml)
+
+**[Live demo](https://lanedetectionculane.streamlit.app/)**: upload a dashcam image or short video, or try a built-in sample. Run CLRerNet (pretrained or our robust fine-tune), UFLDv2 or SCNN on a free CPU in the browser, side by side. The first visit after a restart takes a few minutes to set up. Code: [`streamlit_cloud/`](streamlit_cloud/).
+**[Model page](https://huggingface.co/spaces/roh24/culane_lane_detection)** for the robust CLRerNet checkpoint: recipe, results, limits and download.
 
 A reproducible benchmark of three **pretrained** lane detectors on the full CULane test set, run on an HTCondor GPU cluster. It covers:
 - reproducing the published accuracy;
@@ -9,7 +12,8 @@ A reproducible benchmark of three **pretrained** lane detectors on the full CULa
 - a corruption-robustness study;
 - dashcam video tests;
 - a temporal lane tracker with a controlled ablation;
-- corruption-augmented fine-tuning of CLRerNet, compared against a same-schedule control.
+- corruption-augmented fine-tuning of CLRerNet, compared against a same-schedule control;
+- a cross-dataset test on TuSimple, the tracker's accuracy on labeled video, and ONNX/INT8 CPU deployment (v5).
 
 | Model | Code | Checkpoint |
 |---|---|---|
@@ -79,17 +83,53 @@ Control and corruption runs: mean ± standard deviation over 3 seeds.
 
 Details: §7.1–7.2 of the report and `reports/finetune_seeds.csv`.
 
+### Cross-dataset test: TuSimple (never trained on)
+
+![CLRerNet vs SCNN on unseen TuSimple test clips](assets/tusimple_crossdataset.gif)
+
+*CLRerNet (left) and SCNN (right) on three unseen TuSimple test clips, through the demo's own pipeline. SCNN finds no lanes; CLRerNet finds most of them but misses some in the shaded first clip. Clips: TuSimple lane benchmark, via the Hugging Face mirror `dotblue/TuSimple`.*
+
+233 test clips: the complete ones in the public 10% mirror. The whole frame is resized to the CULane shape, rows below y = 330 are scored, and the metric is the official TuSimple metric. Mean ± sd over 3 seeds for the fine-tunes.
+
+| Model | TuSimple F1 [95% CI] | FN rate |
+|---|---|---|
+| SCNN | 0.0 | 100% |
+| UFLDv2 | 65.2 [61.3–69.1] | 39% |
+| **CLRerNet, released** | **68.0 [64.8–71.1]** | 41% |
+| CLRerNet, control fine-tune | 62.5 ± 1.6 | 50% |
+| CLRerNet, corruption fine-tune | 58.2 ± 0.7 | 54% |
+
+- **All models miss many lanes on an unseen dataset.** SCNN fails almost completely, which was confirmed with a second, independent pipeline.
+- **The corruption fine-tune's robustness does not transfer:** it scores 4.3 F1 below its own same-schedule control on every seed pair. Both fine-tunes score below the released model, so extra CULane training costs generalisation.
+
 ### Dashcam video and temporal tracking
 
 - **Video adapter:** squashing 16:9 video into CULane's 2.78:1 shape distorts geometry. An aspect-preserving crop adapter, placed by matching vanishing points, reduces lane-count flicker for all three models.
 - **Temporal tracker:** a causal tracker with matching, EMA smoothing and short dashed holds halves lane re-starts for SCNN and CLRerNet and reduces jitter for all three models, at under 1 ms per frame.
+- **Tracker accuracy on labeled video (v5):** on TuSimple clips at 20 fps it raises CLRerNet's F1 by **+3.4** (paired 95% CI 1.6 to 5.2). For UFLDv2 and SCNN the change is not significant. On CULane, whose frames are 1 s apart, it costs 16–20 F1, because it is built for consecutive video frames.
 - **Geometry filter:** tested with three calibrations and not adopted, because it removed real lanes.
+
+### CPU deployment: ONNX and INT8 (CLRerNet)
+
+| | PyTorch FP32 | ONNX FP32 | ONNX INT8 |
+|---|---|---|---|
+| Forward pass, 4 CPU threads (Xeon E5-2690 v4) | 224 ms | **156 ms** | 223 ms |
+| CULane test F1 | 81.55 | **81.55** | 67.92 |
+
+- **ONNX FP32:** the same test result as the GPU run (identical TP/FP/FN), 1.4× faster than PyTorch on CPU.
+- **Post-training INT8 (MinMax calibration, lane head kept in FP32):** no faster on this CPU, which lacks int8 (VNNI) instructions, and loses 13.6 F1. With every layer quantised, F1 drops to 0. It is not used.
 
 Full write-up: [`reports/FINAL_REPORT.md`](reports/FINAL_REPORT.md).
 
-## Demo app
+## Demo apps
 
-`app/streamlit_app.py` is a small web app:
+**Public demo** (`streamlit_cloud/`, [live](https://lanedetectionculane.streamlit.app/)): Streamlit Community Cloud, free CPU, any Python version.
+- On first start, the app builds the models' own pinned Python 3.11 environment with `uv`, clones the model code at the pinned commits, and downloads and sha256-checks the checkpoints.
+- Each model runs in a persistent worker process, so after the first run an image takes about 1 s.
+- When several models are picked, it shows them side by side.
+- `streamlit_cloud/ci_smoke.py` runs the same setup and inference in CI.
+
+**Cluster demo** (`app/`): `app/streamlit_app.py` is a small web app:
 1. Pick one or more models: CLRerNet, the robust fine-tuned CLRerNet, UFLDv2 or SCNN.
 2. Upload a dashcam image or video.
 3. Click **Generate**.
@@ -106,6 +146,12 @@ On Windows, double-click `app\run_app.bat` instead: it starts the app and opens 
 
 Uploaded media have no labels, so the app shows detections and stability statistics, not accuracy.
 
+## Tests and CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push:
+- **unit tests** (`tests/test_core.py`): the TuSimple metric, the tracker's confirm/hold/smoothing rules, the CPU port of CLRerNet's lane NMS (including equality with the CUDA-verified version), and lane file I/O;
+- **an end-to-end smoke test of the public demo on Python 3.14**, as on Streamlit Cloud: real setup, two CLRerNet checkpoints, model reuse and a page render.
+
 ## Repository layout
 
 | Path | Contents |
@@ -116,6 +162,8 @@ Uploaded media have no labels, so the app shows detections and stability statist
 | `reports/` | result tables (CSV/JSON) and the full report |
 | `patches/` | notes on every environment fix and correction, with evidence |
 | `app/` | Streamlit demo app and its cluster backend |
+| `streamlit_cloud/` | public demo (Streamlit Community Cloud) and its CI smoke test |
+| `tests/`, `.github/` | unit tests and CI |
 
 ## Reproducing
 
@@ -133,7 +181,7 @@ Environment: `pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel` with one venv per mod
 ## Not included
 
 - **CULane data and images:** the licence forbids redistribution.
-- **Model weights:** download them from the authors. The fine-tuned checkpoints are not included either; rerun the fine-tune to recreate them.
+- **Model weights:** download them from the authors. The robust fine-tune (seed 0) is hosted on the [model page](https://huggingface.co/spaces/roh24/culane_lane_detection); the other fine-tunes can be recreated by rerunning the fine-tune.
 - **Vendor code:** it's pinned by commit and was never modified.
 
 ## Licence

@@ -1,0 +1,5 @@
+variant,culane_test_f1,cpu_forward_ms_1thread,cpu_forward_ms_4threads,cpu_full_ms_4threads,note
+torch_fp32,81.55,771.5,223.7,230.5,torch F1 = released GPU run (report 5.1)
+onnx_fp32,81.55,548.2,155.6,163.0,
+int8_all,0.0,604.5,251.3,257.3,
+int8_bbneck,67.92,631.6,222.8,229.7,

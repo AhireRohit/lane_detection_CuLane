@@ -1,0 +1,19 @@
+dataset,model,variant,f1,metric
+"CULane test (419 clips, 1 frame/s, 34680 frames)",clrernet,B0r,81.48,"official CULane F1 (IoU 0.5, width 30)"
+"CULane test (419 clips, 1 frame/s, 34680 frames)",clrernet,B2,61.63,"official CULane F1 (IoU 0.5, width 30)"
+"CULane test (419 clips, 1 frame/s, 34680 frames)",clrernet,B2obs,69.0,"official CULane F1 (IoU 0.5, width 30)"
+"CULane test (419 clips, 1 frame/s, 34680 frames)",scnn,B0r,69.76,"official CULane F1 (IoU 0.5, width 30)"
+"CULane test (419 clips, 1 frame/s, 34680 frames)",scnn,B2,53.5,"official CULane F1 (IoU 0.5, width 30)"
+"CULane test (419 clips, 1 frame/s, 34680 frames)",scnn,B2obs,61.16,"official CULane F1 (IoU 0.5, width 30)"
+"CULane test (419 clips, 1 frame/s, 34680 frames)",ufldv2_notta,B0r,75.13,"official CULane F1 (IoU 0.5, width 30)"
+"CULane test (419 clips, 1 frame/s, 34680 frames)",ufldv2_notta,B2,57.31,"official CULane F1 (IoU 0.5, width 30)"
+"CULane test (419 clips, 1 frame/s, 34680 frames)",ufldv2_notta,B2obs,65.56,"official CULane F1 (IoU 0.5, width 30)"
+"TuSimple subset (233 clips, 20 fps, scored on frame 20)",clrernet,B0r,67.98,TuSimple F1 (official LaneEval FP/FN)
+"TuSimple subset (233 clips, 20 fps, scored on frame 20)",clrernet,B2,71.4,TuSimple F1 (official LaneEval FP/FN)
+"TuSimple subset (233 clips, 20 fps, scored on frame 20)",clrernet,B2obs,67.8,TuSimple F1 (official LaneEval FP/FN)
+"TuSimple subset (233 clips, 20 fps, scored on frame 20)",scnn,B0r,0.0,TuSimple F1 (official LaneEval FP/FN)
+"TuSimple subset (233 clips, 20 fps, scored on frame 20)",scnn,B2,0.43,TuSimple F1 (official LaneEval FP/FN)
+"TuSimple subset (233 clips, 20 fps, scored on frame 20)",scnn,B2obs,0.0,TuSimple F1 (official LaneEval FP/FN)
+"TuSimple subset (233 clips, 20 fps, scored on frame 20)",ufldv2,B0r,65.4,TuSimple F1 (official LaneEval FP/FN)
+"TuSimple subset (233 clips, 20 fps, scored on frame 20)",ufldv2,B2,65.82,TuSimple F1 (official LaneEval FP/FN)
+"TuSimple subset (233 clips, 20 fps, scored on frame 20)",ufldv2,B2obs,66.32,TuSimple F1 (official LaneEval FP/FN)

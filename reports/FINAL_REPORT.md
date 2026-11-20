@@ -1,8 +1,8 @@
-# CULane Lane-Detection Benchmark — Final Report (v4)
+# CULane Lane-Detection Benchmark — Final Report (v5)
 
 **Project:** `Lane_Detection/benchmark_culane` on the Saarland HPC cluster (HTCondor, Tesla P100-SXM2-16GB)
-**Date:** 2026-11-20 · **v4** adds three-seed results for the fine-tunes and a broad-augmentation arm (§7.2). v3 is kept as `reports/FINAL_REPORT_v3.md`. · **v3** added a corruption-augmented fine-tune of CLRerNet with a same-schedule control (§7.1). v2 is kept as `reports/FINAL_REPORT_v2.md`. · **v2** (2026-11-19) added robustness, verified published per-scenario values, UFLDv2 without TTA, an aspect-preserving video adapter, a failure gallery and the environment manifest. It also corrects a UFLDv2 decoder bug that affected v1's UFLDv2 speed, video and ablation numbers (see §11). v1 is kept as `reports/FINAL_REPORT_v1.md`.
-**Scope:** three pretrained CULane models — SCNN (PyTorch port), Ultra-Fast-Lane-Detection-v2 ResNet34, CLRerNet DLA34 EMA. No training from scratch, no TuSimple, no YOLOPv2. The only training is the 3-epoch CLRerNet fine-tune in §7.1, which starts from the released checkpoint.
+**Date:** 2026-11-20 · **v5** adds a cross-dataset test on TuSimple (§7.3), the tracker's accuracy on labeled video (§9.3), ONNX FP32/INT8 CPU deployment of CLRerNet (§6.1), a public demo with persistent model workers, and CI. v4 is kept as `reports/FINAL_REPORT_v4.md`. · **v4** added three-seed results for the fine-tunes and a broad-augmentation arm (§7.2). v3 is kept as `reports/FINAL_REPORT_v3.md`. · **v3** added a corruption-augmented fine-tune of CLRerNet with a same-schedule control (§7.1). v2 is kept as `reports/FINAL_REPORT_v2.md`. · **v2** (2026-11-19) added robustness, verified published per-scenario values, UFLDv2 without TTA, an aspect-preserving video adapter, a failure gallery and the environment manifest. It also corrects a UFLDv2 decoder bug that affected v1's UFLDv2 speed, video and ablation numbers (see §11). v1 is kept as `reports/FINAL_REPORT_v1.md`.
+**Scope:** three pretrained CULane models — SCNN (PyTorch port), Ultra-Fast-Lane-Detection-v2 ResNet34, CLRerNet DLA34 EMA. No training from scratch, no TuSimple training (TuSimple test clips are used only for evaluation, §7.3), no YOLOPv2. The only training is the 3-epoch CLRerNet fine-tune in §7.1, which starts from the released checkpoint.
 
 Every number is measured in this project unless it is labelled *published*. Published values come from the papers or READMEs, were checked against the source text, and sit in their own columns.
 
@@ -22,6 +22,9 @@ Every number is measured in this project unless it is labelled *published*. Publ
 - CLRerNet is the most accurate in every scenario, the fastest end to end, and the most robust to corruption. Rain is the worst corruption for all three models.
 - **Corruption-augmented fine-tuning (§7.1–7.2, three seeds):** 3 epochs of CLRerNet training with rain / blur / JPEG / darkening augmentation raise mean corrupted F1 from 72.56 to 77.44 ± 0.11 (heavy rain 46.4 → 77.4). Clean test F1 falls from 81.55 to 81.23 ± 0.05; the same-schedule control (81.27 ± 0.10, 70.17 ± 0.15 corrupted) shows that this cost comes from fine-tuning itself, not from the corruptions. There is no gain on the held-out shadow corruption. A broad-augmentation arm with 7 other corruption types transfers partly: motion blur +4.3, JPEG +2.3, rain −1.2, against the control.
 - Dashcam video: an aspect-preserving crop adapter, calibrated by vanishing-point matching, removes the 0.64 aspect distortion of the naive resize and reduces lane-count flicker for SCNN (291 → 213), UFLDv2 (23 → 12) and CLRerNet (137 → 118).
+- **Cross-dataset (§7.3, TuSimple, 233-clip public subset, never trained on):** CLRerNet keeps the lead, with TuSimple F1 68.0 [95% CI 64.8–71.1] against UFLDv2's 65.2. SCNN finds lanes in only 4 of 233 frames, confirmed independently with the demo's own pipeline. The corruption fine-tune generalises **worse** than its same-schedule control: 58.2 ± 0.7 vs 62.5 ± 1.6 over 3 seeds, and both are below the released model. Robustness to synthetic corruptions did not transfer to a new dataset.
+- **Tracker accuracy on labeled video (§9.3):** at real video rate (TuSimple, 20 fps), B2 raises CLRerNet's F1 by +3.4 [paired 95% CI 1.6–5.2]; for SCNN (+0.4) and UFLDv2 (+0.4) the change is not significant. At CULane's 1 annotated frame per second, the same tracker costs 16–20 F1 (9–12 without held lanes). Its smoothing and holds assume consecutive video frames.
+- **CPU deployment (§6.1):** ONNX Runtime FP32 gives the same CULane test result as the GPU run, with identical TP/FP/FN, and is 1.4× faster than PyTorch on CPU. Post-training static INT8 (MinMax calibration) is not usable: F1 drops to 0 with every layer quantised and to 67.9 with the lane head in FP32. It is also no faster on the cluster's Broadwell Xeon, which has no VNNI instructions.
 - **Downstream improvement:** a causal temporal lane tracker (B2) roughly halves lane re-starts for CLRerNet and SCNN and cuts frame-to-frame jitter for all three models, at < 1 ms/frame. For UFLDv2, which is already stable, it increases lane-count changes. The geometry-validity filter (B1/B3) was tested under three settings and is **not adopted**: it removed real lanes or had no measurable benefit.
 
 ---
@@ -123,6 +126,38 @@ Sources: SCNN, arXiv 1712.06080 Table 5; UFLDv2, arXiv 2206.07389 Table 7; CLRer
 - **CLRerNet and the cuBLAS setting:** `CUBLAS_WORKSPACE_CONFIG=:4096:8` is needed only for the deterministic `tools/test.py`; upstream's Dockerfile sets it. A controlled off/on/off A/B on one GPU (job 73932) shows it costs CLRerNet ~3.6 ms per forward pass and 24 MB: 20.7 ms full without it, 24.1 ms (41.5 FPS) with it. SCNN and UFLDv2 never had the setting, so the like-for-like figure above is without it.
 - **Decode check:** every stage-split decode was verified against the vendor reference on frame 0 (max difference ≤ 0.001 px). The UFLDv2 reference is the author's complete row + column output.
 - **Superseded runs:** 73862 measured UFLDv2 with the broken row-only decoder. 73915 was contended (load average 9–15). Both are kept and marked. No literature FPS is reported as a measurement.
+
+### 6.1 CPU deployment: ONNX FP32 and INT8 (v5)
+
+**Question.** How fast does CLRerNet run on a CPU, as in the public demo, and what does post-training quantisation cost?
+
+**Design (fixed before any test-set scoring, `scripts/onnx_clrernet.py`).**
+- The exported graph is exactly the network part timed in §6: backbone, neck and head up to the final refinement stage's raw lane tensors (opset 17). Preprocessing and decoding stay in Python and are shared by every variant: the vendor pipeline, then NMS through the exact CPU port `nms_cpu.py`, then the vendor CULane string writer.
+- **Variants:**
+  - `onnx_fp32`: ONNX Runtime 1.19.2, CPU.
+  - `int8_all`: static INT8, QDQ, per-channel S8 weights, S8 activations, MinMax calibration on 300 CULane **train** images.
+  - `int8_bbneck`: the same, but with the lane head left in FP32.
+- **Checks:**
+  - every variant against PyTorch on 50 validation images;
+  - this writer path against the original GPU prediction files on 300 test images: 300 of 300 match, max 0.002 px.
+- **Speed:** 200 validation images on one Xeon E5-2690 v4 (Broadwell), median.
+
+| Variant | Lanes vs PyTorch (50 val images) | Forward, 1 thread | Forward, 4 threads | Model size | CULane test F1 |
+|---|---|---|---|---|---|
+| PyTorch FP32 (CPU) | reference | 772 ms | 224 ms | 63 MB | 81.55 (GPU run, §5) |
+| ONNX FP32 | identical, max 0.003 px | **548 ms** | **156 ms** | 60.5 MB | **81.55**, TP/FP/FN identical to the GPU run |
+| INT8, all layers | differ on 42 of 50 images | 605 ms | 251 ms | 15.6 MB | 0 (no true positive) |
+| INT8, lane head in FP32 | differ on 43 of 50 images | 632 ms | 223 ms | 16.7 MB | 67.92 |
+
+**Findings.**
+- **ONNX FP32 is a free speed-up:** 1.41× on 1 thread and 1.44× on 4 threads.
+  - The full test set gives the same 79,864 / 11,110 / 25,022 TP/FP/FN as the original GPU run.
+  - Speeds are from the final export run (job 74381). The first run (74374) measured 807 / 562 ms and 234 / 152 ms, the same ratio.
+- **Post-training INT8 is not usable here.**
+  - **Speed:** Broadwell has no VNNI int8 instructions, so the QDQ graphs run no faster than FP32, though they are 3.6–3.9× smaller.
+  - **Accuracy:** with every layer quantised, no predicted lane is correct (F1 0). With the lane head kept in FP32, F1 is still 67.92 (−13.6). So most of the damage happens in the quantised backbone and neck.
+  - Better calibration (entropy or percentile ranges) or quantisation-aware training might recover accuracy. These were not tried: choosing among them would need a validation-based selection step that was not declared in advance.
+- **Bug found and fixed:** the first INT8 run (`results/onnx/export_v1.json`) quantised after graph optimisation, which renamed every node. The lane-head exclusion therefore matched nothing, and the two INT8 variants were identical. The fix keeps the node names; it is a bug fix to the declared variant, not a new setting.
 
 ## 7. Corruption robustness (CULane test subset)
 
@@ -241,6 +276,40 @@ Sources: SCNN, arXiv 1712.06080 Table 5; UFLDv2, arXiv 2206.07389 Table 7; CLRer
   - **Conclusion:** targeted augmentation works strongly for the corruption families it contains. Broad augmentation with different families gives some transfer, to blur and compression, but not a general robustness gain.
 - Outputs: `reports/finetune_seeds.csv`, `reports/robustness.csv` (10 models), `results/finetune/*-74187/`, `results/clrernet_ft_*_s{1,2}/` and `results/clrernet_ft_broad/official_eval/`. The 5-model robustness files are kept as `*_5models.*`.
 
+### 7.3 Cross-dataset test: TuSimple (v5)
+
+**Question.** How do the CULane models, and the fine-tunes from §7.1–7.2, do on a dataset none of them was trained on?
+
+**Data.** The TuSimple lane test set via the ungated Hugging Face mirror `dotblue/TuSimple` (Apache-2.0, pinned commit). The mirror holds a **10% sample**: 233 of the 2,782 test clips are complete (all 20 frames), and only those are used. Downloaded to the cluster only and never redistributed. Training on TuSimple is out of scope; nothing was trained or tuned on it.
+
+**Protocol, fixed before any TuSimple result was seen (`scripts/tusimple_eval.py`).**
+- **Adapter:** the whole 1280×720 frame is resized to the 1640×590 CULane canvas, as in the demo's "squash" option. Then each model's verified inference path runs (the `benchmark_speed.py` builders).
+- **Scored rows:** only label rows at y ≥ 330, for ground truth and predictions alike.
+  - y = 330 is CLRerNet's crop line (cut_height 270 on the CULane canvas) mapped back, i.e. the region every model sees.
+  - Ground-truth lanes left with fewer than 2 points are dropped.
+- **Metrics:**
+  - the official TuSimple metric (`LaneEval`, re-implemented line by line, with unit tests): accuracy, FP rate and FN rate;
+  - the TuSimple F1 used by CLRNet/CLRerNet, 2(1−FP)(1−FN)/((1−FP)+(1−FN)), with 95% clip-level bootstrap CIs;
+  - for reference, the official CULane C++ evaluator on the same lanes at 1280×720.
+
+| Model | Accuracy | FP rate | FN rate | **TuSimple F1** [95% CI] | CULane-style F1 |
+|---|---|---|---|---|---|
+| SCNN | 0.9% | 1.7% | 100% | 0.0 | — |
+| UFLDv2 (no TTA) | 80.3% | 29.8% | 39.2% | 65.2 [61.3–69.1] | 58.8 |
+| **CLRerNet, released** | 75.6% | 19.6% | 41.1% | **68.0 [64.8–71.1]** | **60.1** |
+| CLRerNet, control fine-tune (3 seeds) | 67.0 ± 1.7% | 16.9 ± 2.1% | 49.9 ± 1.8% | 62.5 ± 1.6 | 56.2 ± 1.5 |
+| CLRerNet, corruption fine-tune (3 seeds) | 64.3 ± 1.8% | 19.9 ± 0.9% | 54.3 ± 1.1% | 58.2 ± 0.7 | 52.3 ± 0.9 |
+| CLRerNet, broad fine-tune (1 seed) | 72.3% | 19.5% | 45.9% | 64.7 [61.2–68.0] | 56.9 |
+
+**Findings.**
+- **Every model loses a lot on unseen data, mostly through missed lanes.** CLRerNet scores 68.0 here against 81.55 on CULane, with an FN rate of 41%. CULane-trained detectors are known to transfer imperfectly; these numbers are not comparable to TuSimple-trained models (~97 F1).
+- **SCNN fails almost completely:** it outputs 8 lanes in 233 frames. To rule out a scoring bug, the same clips were run through the demo's separate pipeline, which also shows 0 SCNN lanes where CLRerNet finds them (`assets/tusimple_crossdataset.gif`). SCNN loads and works on CULane and on the demo's sample clip, so this is a generalisation failure, not a loading error.
+- **Fine-tuning on CULane costs cross-dataset accuracy.** The control loses 5.5 F1 against the released model, which is the EMA of a longer run. This mirrors the control's loss of corruption robustness in §7.2.
+- **The corruption fine-tune generalises worse than its control:** −4.25 F1, in all three seed pairs (58.7 / 57.4 / 58.6 vs 64.0 / 60.8 / 62.6).
+  - So the large §7.2 gains on synthetic rain, blur and JPEG do **not** carry over to a different camera, road and annotation style.
+  - The broad arm (64.7, one seed) sits between control and released.
+- Outputs: `reports/tusimple_cross_dataset.csv`, `results/tusimple/<model>/`.
+
 ## 8. Dashcam baseline (Phase E)
 
 **Video:** `vendors/ufldv2/example.mp4`, the UFLDv2 repo's demo clip (upstream PR #115; original footage source undocumented). It is 1280×720, 25 fps, 1,260 frames, sha256 `65194992…7d5f`. **No labels: nothing here is an accuracy measurement.**
@@ -310,6 +379,43 @@ Values are first half / second half; jitter is in CULane-canvas px (× 0.78 for 
   - In one reviewed frame, a held lane carried a false centre-lane detection for up to 3 frames.
 - **Squash baseline (`reports/ablation_temporal.csv`):** B2 shows the same pattern, e.g. CLRerNet re-starts 19.4 → 9.1 / 6.7 → 4.1 and SCNN 17.0 → 8.1 / 32.0 → 8.3.
 
+### 9.3 Tracker accuracy on labeled video (v5)
+
+**Question.** §9.1 showed that B2 makes lanes steadier on unlabeled video. Does it make them more *accurate*?
+
+**Design.** No parameter changed (`P` in `temporal_ablation.py`). Two labeled sources:
+- **CULane test:** 419 clips with frames 1 s apart, all 34,680 frames scored by the official evaluator (`scripts/tracker_culane.py`).
+- **TuSimple subset:** 233 clips at 20 fps, run in order over frames 1–20 and scored on the labeled frame 20 (§7.3 protocol).
+
+**Variants, all declared before scoring:**
+- **B0r:** raw predictions converted to the tracker's lane format (rows 250–580 every 10 px on the CULane canvas), with no tracking. This is the fair control, since B2 outputs that format.
+- **B2:** the tracker's output including held lanes, as the demo draws them.
+- **B2obs:** the tracker's output without held lanes.
+
+| Data | Model | B0r F1 | B2 F1 | B2obs F1 |
+|---|---|---|---|---|
+| CULane test (1 frame/s) | CLRerNet | 81.48 | 61.63 | 69.00 |
+| | SCNN | 69.76 | 53.50 | 61.16 |
+| | UFLDv2 (no TTA) | 75.13 | 57.31 | 65.56 |
+| TuSimple (20 fps) | CLRerNet | 67.98 | **71.40** | 67.80 |
+| | SCNN | 0.00 | 0.43 | 0.00 |
+| | UFLDv2 (no TTA) | 65.40 | 65.82 | 66.32 |
+
+Paired clip bootstrap, B2 − B0r on TuSimple (2,000 resamples, `reports/v5_comparisons.csv`):
+- CLRerNet **+3.42 [1.60, 5.23]**;
+- SCNN +0.43 [0.00, 1.07];
+- UFLDv2 +0.42 [−1.32, 2.20].
+
+**Findings.**
+- **At real video rate, B2 improves CLRerNet's accuracy significantly.** The gain is in recall: the FN rate drops from 41.1% to 36.7% while FP also drops. That is the held lanes bridging short missed detections. For UFLDv2 and SCNN the change is not significant.
+- **At 1 frame per second, B2 is harmful** (−16 to −20 F1; −9 to −12 for B2obs). Two causes:
+  - its EMA averages lanes 1 s apart;
+  - "confirm after 2 hits" drops every lane in the first frame of each clip, and a held lane persists up to 3 s.
+
+  This is a design boundary, not a bug: B2 assumes consecutive video frames, and the demo uses it only on video, at ≤ 10 fps after resampling.
+- The format conversion alone (raw → B0r) costs 0.07 (CLRerNet) to 0.73 (UFLDv2) CULane F1. That is why B0r, not the raw score, is the control.
+- This partly addresses §11's "no second video" limitation. It is labeled, but TuSimple is a different dataset, and the result rests on 233 clips.
+
 ### 9.2 Not adopted: B1 / B3 geometry filter (three settings)
 
 **Calibration** (prediction-calibrated, CULane val; `reports/b1_calibration_pred_val.json`):
@@ -345,6 +451,11 @@ Values are first half / second half; jitter is in CULane-canvas px (× 0.78 for 
 | Crop adapter ignored for UFLDv2 | 73901: report showed squash | crop argument now read before `build_ufld` rewrites `sys.argv` | `*_INVALID_no_crop_applied` |
 | Speed rerun contended | 73915: load average 9–15 | quiet rerun 73930; duplicate 73931 removed | `INVALID_CONTENDED.txt` |
 | Robustness split jobs did nothing | 73903: `;` vs `,` delimiter | parser fixed; unknown condition names now abort | removed within a minute |
+| int8_bbneck identical to int8_all | 74374: 0 head nodes excluded | quantise from a graph that keeps exported node names (`skip_optimization`) | v1 kept as `results/onnx/export_v1.json` |
+| CPU NMS port crashed on INT8 outputs | 74379: empty slice for a negative lane start | index the flat buffer like the kernel's pointer; unit test shows identical results for valid outputs | `tests/test_core.py` |
+| TuSimple CULane-style F1 counted phantom lanes | lane files with no lanes held one newline | empty files, as the official writer; rescored from saved predictions (74380); TuSimple metric unchanged (asserted) | v1 scores kept as `culane_eval_v1_*.txt` |
+| TuSimple mirror incomplete | 404 for most clips | use the 233 complete test clips; documented in §7.3 | `download_tusimple.sh` |
+| Public demo had no ffmpeg | live check: videos failed | Streamlit Cloud reads `packages.txt` only at the repo root; root copy + `imageio-ffmpeg` fallback | caught by testing the live site |
 | CLRerNet robustness exit 2 after finishing | 73900.2 | `gpu_entry.sh` edited while running (bash reads scripts incrementally); results complete | lesson: never edit a running entry script |
 | UFLDv2 vendor self-eval after inference | 73894: `./evaluation/culane/evaluate` not found | not needed; scored with the shared evaluator | predictions complete |
 
@@ -358,7 +469,7 @@ All failed runs, logs and earlier results are preserved. Edited scripts keep `.b
   - stability metrics are proxies, not accuracy;
   - visual reviews covered small samples;
   - the clip has now been seen many times, so it must not serve as a final held-out test for further changes.
-- **No second video.** B2 still needs confirmation on an independent recording.
+- **No second dashcam video.** B2's accuracy is now measured on labeled video (§9.3, TuSimple 20 fps, 233 clips), but not on a second recording from the dashcam setting.
 - **Robustness:**
   - the corruptions are synthetic;
   - images are decoded with OpenCV for all models; for UFLDv2 this differs from the author's PIL loader by a median 0.08 px, but occasionally flips an anchor.
@@ -367,6 +478,8 @@ All failed runs, logs and earlier results are preserved. Edited scripts keep `.b
   - the training and test corruptions share families (different implementations); held-out corruptions show only partial transfer;
   - the fine-tuned model was not re-timed or run on the dashcam clip.
 - **Unverified video detail:** the crop band position comes from predicted-lane vanishing points of the baseline. It is label-free but not verified against camera calibration.
+- **Cross-dataset (§7.3):** only a 10% public subset of TuSimple (233 clips) was available without an account, so CIs are wide (±3 F1). A fixed squash adapter and the y ≥ 330 row cut are this project's protocol, not the official TuSimple setting.
+- **INT8 (§6.1):** measured on one CPU generation without VNNI. A modern CPU may show a speed-up; this was not tested.
 - **Not done:** a separate `literature` FPS table, and video throughput on more than one clip.
 
 **Suggested next steps:**
@@ -396,6 +509,10 @@ condor_submit jobs/finetune/ft_full.sub                                 # CLRerN
 condor_submit_dag jobs/ft_dag/ft_eval.dag                               # fine-tune test + robustness inference, then scoring
 condor_submit jobs/finetune/ft_overnight.sub                            # seeds 1-2 for both arms + broad arm (job 74187)
 bash scripts/make_ft2_dag.sh <ClusterId> && condor_submit_dag jobs/ft_dag2/ft2_eval.dag   # their evaluation + parallel scoring
+condor_submit jobs/tracker_culane/tracker_culane.sub                    # v5: tracker accuracy on CULane test clips
+condor_submit jobs/tusimple/download.sub && condor_submit jobs/tusimple/eval.sub   # v5: TuSimple subset, 10 models
+condor_submit jobs/onnx/onnx_export.sub && condor_submit jobs/onnx/onnx_infer.sub  # v5: ONNX export, checks, speed, full test
+python3 scripts/summarize_v5.py --print                                 # v5 tables (login node, standard library)
 ```
 
 SCNN and UFLDv2 full inference use `scripts/gpu_entry.sh <model> full` (jobs 73765, 73755). Every job writes `.out`, `.err` and `.log` under `logs/` and its results to a timestamped run directory.
@@ -414,3 +531,7 @@ SCNN and UFLDv2 full inference use `scripts/gpu_entry.sh <model> full` (jobs 737
 | Ablation | `reports/ablation_temporal_crop_adapter.csv`, `reports/ablation_temporal.csv`, `reports/ablation_temporal_v2_predcalib.csv`, `reports/b1_calibration_pred_val.json`, `results/ablation/fix_*_73921/` |
 | Environment and dataset | `reports/environment_manifest.json`, `reports/annotations_new_comparison.json` |
 | Patches and rationale | `patches/*.md` |
+| v5: cross-dataset (TuSimple) | `reports/tusimple_cross_dataset.csv`, `results/tusimple/`, `assets/tusimple_crossdataset.gif` |
+| v5: tracker on labeled video | `reports/tracker_labeled.csv`, `reports/v5_comparisons.csv`, `results/tracker_culane/` |
+| v5: ONNX / INT8 | `reports/onnx_clrernet.csv`, `results/onnx/export.json`, `results/onnx_eval/` |
+| v5: demo and CI | `streamlit_cloud/`, `.github/workflows/ci.yml`, `tests/test_core.py` |
