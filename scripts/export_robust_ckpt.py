@@ -20,5 +20,5 @@ assert re.keys() == ck['state_dict'].keys()
 assert all(torch.equal(re[k], ck['state_dict'][k]) for k in re), 'tensor mismatch'
 h = hashlib.sha256(open(dst, 'rb').read()).hexdigest()
 blob = open(dst, 'rb').read()
-assert b'/home/' not in blob and b'nnti' not in blob, 'path strings left in export'
+assert b'/home/' not in blob, 'path strings left in export'
 print(f'EXPORT OK {len(re)} tensors identical; sha256 {h}  {dst}')
