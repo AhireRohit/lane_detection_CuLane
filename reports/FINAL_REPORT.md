@@ -1,7 +1,7 @@
-# CULane Lane-Detection Benchmark — Final Report (v3)
+# CULane Lane-Detection Benchmark — Final Report (v4)
 
 **Project:** `Lane_Detection/benchmark_culane` on the Saarland HPC cluster (HTCondor, Tesla P100-SXM2-16GB)
-**Date:** 2026-11-20 · **v3** adds a corruption-augmented fine-tune of CLRerNet with a same-schedule control (§7.1). v2 is kept as `reports/FINAL_REPORT_v2.md`. · **v2** (2026-11-19) added robustness, verified published per-scenario values, UFLDv2 without TTA, an aspect-preserving video adapter, a failure gallery and the environment manifest. It also corrects a UFLDv2 decoder bug that affected v1's UFLDv2 speed, video and ablation numbers (see §11). v1 is kept as `reports/FINAL_REPORT_v1.md`.
+**Date:** 2026-11-20 · **v4** adds three-seed results for the fine-tunes and a broad-augmentation arm (§7.2). v3 is kept as `reports/FINAL_REPORT_v3.md`. · **v3** added a corruption-augmented fine-tune of CLRerNet with a same-schedule control (§7.1). v2 is kept as `reports/FINAL_REPORT_v2.md`. · **v2** (2026-11-19) added robustness, verified published per-scenario values, UFLDv2 without TTA, an aspect-preserving video adapter, a failure gallery and the environment manifest. It also corrects a UFLDv2 decoder bug that affected v1's UFLDv2 speed, video and ablation numbers (see §11). v1 is kept as `reports/FINAL_REPORT_v1.md`.
 **Scope:** three pretrained CULane models — SCNN (PyTorch port), Ultra-Fast-Lane-Detection-v2 ResNet34, CLRerNet DLA34 EMA. No training from scratch, no TuSimple, no YOLOPv2. The only training is the 3-epoch CLRerNet fine-tune in §7.1, which starts from the released checkpoint.
 
 Every number is measured in this project unless it is labelled *published*. Published values come from the papers or READMEs, were checked against the source text, and sit in their own columns.
@@ -20,7 +20,7 @@ Every number is measured in this project unless it is labelled *published*. Publ
 
 - UFLDv2 (both settings) and CLRerNet reproduce their published F1 within 0.05. SCNN is 1.53 below its paper, with most of the gap in the shadow (−5.5) and night (−4.5) scenarios.
 - CLRerNet is the most accurate in every scenario, the fastest end to end, and the most robust to corruption. Rain is the worst corruption for all three models.
-- **Corruption-augmented fine-tuning (§7.1):** 3 epochs of CLRerNet training with rain / blur / JPEG / darkening augmentation raise mean corrupted F1 from 72.56 to 77.33 (heavy rain 46.4 → 77.1) for a 0.37 drop in clean test F1 (81.55 → 81.18). A same-schedule control without corruptions does not gain (70.21). There is no gain on the held-out shadow corruption, so the result covers the corruption families seen in training.
+- **Corruption-augmented fine-tuning (§7.1–7.2, three seeds):** 3 epochs of CLRerNet training with rain / blur / JPEG / darkening augmentation raise mean corrupted F1 from 72.56 to 77.44 ± 0.11 (heavy rain 46.4 → 77.4). Clean test F1 falls from 81.55 to 81.23 ± 0.05; the same-schedule control (81.27 ± 0.10, 70.17 ± 0.15 corrupted) shows that this cost comes from fine-tuning itself, not from the corruptions. There is no gain on the held-out shadow corruption. A broad-augmentation arm with 7 other corruption types transfers partly: motion blur +4.3, JPEG +2.3, rain −1.2, against the control.
 - Dashcam video: an aspect-preserving crop adapter, calibrated by vanishing-point matching, removes the 0.64 aspect distortion of the naive resize and reduces lane-count flicker for SCNN (291 → 213), UFLDv2 (23 → 12) and CLRerNet (137 → 118).
 - **Downstream improvement:** a causal temporal lane tracker (B2) roughly halves lane re-starts for CLRerNet and SCNN and cuts frame-to-frame jitter for all three models, at < 1 ms/frame. For UFLDv2, which is already stable, it increases lane-count changes. The geometry-validity filter (B1/B3) was tested under three settings and is **not adopted**: it removed real lanes or had no measurable benefit.
 
@@ -195,8 +195,51 @@ Sources: SCNN, arXiv 1712.06080 Table 5; UFLDv2, arXiv 2206.07389 Table 7; CLRer
 - **Clean cost:** test F1 falls by 0.37 against the original. Only 0.12 of that is attributable to the corruptions; the other 0.25 also appears in the control, so it comes from the extra training itself.
 - **No transfer to the unseen corruption:** synthetic shadow (80.73 vs control 80.77) and darkening (already near-harmless) show no gain. So the evidence supports robustness to the **corruption families used in training**, implemented differently from the test code. It does not show generalisation to new kinds of corruption.
 - **The control lost some robustness** (72.56 → 70.21) while keeping clean accuracy. A plausible reason is that the released checkpoint is an EMA of a longer run and 3 epochs of further training move it slightly; this was not investigated.
-- **Single seed:** each arm was trained once, so no run-to-run spread is available. The rain/JPEG gains (15–30 F1) are far larger than any plausible seed noise; differences under ~0.5 F1 should not be read as real.
+- **Seeds:** this section's runs are seed 0. §7.2 adds seeds 1 and 2 for both arms; the gains hold, and the clean-cost split above is revised there.
 - Outputs: `reports/finetune_comparison.csv`, `reports/robustness.csv` (5 models), `results/finetune/clrernet_ft_{control,corrupt}_*-73992/`, `results/clrernet_ft_{control,corrupt}/official_eval/`. The original three-model robustness files are kept as `*_3models.*`.
+
+### 7.2 Overnight round: three seeds, and broad augmentation (v4)
+
+**Design (fixed before training, `patches/clrernet_finetune.md`).**
+- **Seeds:** control and corruption were each trained again with seeds 1 and 2, with identical configs (job 74187). Together with §7.1's seed-0 runs, each arm now has 3 runs.
+- **Broad arm (one seed):** the control recipe plus one `OneOf` step (p = 0.5) drawn from 7 corruption types, none of them among the 5 test corruptions: fog, snow, sun flare, Gaussian noise, ISO sensor noise, contrast reduction and colour shift.
+  - The question: does diverse augmentation transfer to corruption types never added in training?
+  - Caveat recorded in advance: the authors' recipe, used by every arm including the original, already has mild motion/median blur (≤ 5 px at 800×320, p = 0.2) and small brightness/contrast/HSV jitter.
+- **Same protocol as §7.1:** epoch-3 checkpoint, no selection, test scored once (DAG 74188). All 10 models received byte-identical corrupted inputs, verified by checksum.
+
+**Results: mean ± standard deviation over seeds 0, 1 and 2 (`reports/finetune_seeds.csv`).**
+
+| | Original | Control (3 seeds) | Corruption (3 seeds) | Broad (1 seed) |
+|---|---|---|---|---|
+| CULane test F1 (34,680 images) | 81.55 | 81.27 ± 0.10 | 81.23 ± 0.05 | 81.32 |
+| Robustness subset, clean | 81.74 | 81.22 ± 0.09 | 81.09 ± 0.03 | 81.28 |
+| **Mean over 15 corruptions** | 72.56 | 70.17 ± 0.15 | **77.44 ± 0.11** | 71.32 |
+| Share of clean F1 kept | 88.8% | 86.4% ± 0.2 | **95.5% ± 0.1** | 87.8% |
+| Rain, mean of 3 severities | 61.37 | 55.93 ± 0.23 | **79.08 ± 0.19** | 54.74 |
+| JPEG, mean of 3 | 68.78 | 65.08 ± 0.33 | **74.43 ± 0.10** | 67.34 |
+| Motion blur, mean of 3 | 70.43 | 68.53 ± 0.11 | 72.18 ± 0.20 | **72.87** |
+| Darkening, mean of 3 | 81.00 | 80.51 ± 0.11 | 80.77 ± 0.08 | 80.76 |
+| Shadow, mean of 3 | 81.25 | 80.78 ± 0.06 | 80.73 ± 0.04 | 80.88 |
+| Heavy rain (1,500 streaks) | 46.41 | 38.69 ± 0.33 | **77.38 ± 0.32** | 37.44 |
+| JPEG q5 | 47.83 | 39.18 ± 0.78 | **64.15 ± 0.17** | 45.37 |
+| Motion blur 25 px | 55.92 | 52.18 ± 0.08 | 60.55 ± 0.59 | **62.93** |
+
+**Findings.**
+- **The corruption-training gain is consistent across seeds.**
+  - Mean corrupted F1 is 77.44 ± 0.11, against 70.17 ± 0.15 for the control (+7.3) and 72.56 for the original (+4.9).
+  - The seed spread is at most 0.8 F1 on any metric, so §7.1's single-seed conclusion stands.
+- **The clean cost comes from fine-tuning, not from the corruptions.**
+  - Test F1: corruption 81.23 ± 0.05 vs control 81.27 ± 0.10, a difference of −0.04, well within the spread.
+  - Both are about 0.3 below the original. §7.1's estimate that the corruptions themselves cost 0.12 was single-seed noise.
+- **Fine-tuning without corruptions consistently costs robustness:** the control loses 2.4 ± 0.15 mean corrupted F1 against the original in all three seeds. This is now a reproducible effect. Its cause was not investigated.
+- **Broad augmentation transfers only partly to unseen corruption types** (single seed; differences of 1 F1 or more are well beyond the 0.1–0.3 seed spread above):
+  - **Motion blur:** +4.3 mean against the control; 62.9 at 25 px, the best of all models, even above the arm trained on motion blur (60.6).
+  - **JPEG:** +2.3 mean against the control.
+  - **Darkening and shadow:** no meaningful change.
+  - **Rain:** −1.2 mean against the control.
+  - Overall, mean corrupted F1 is 71.32: +1.2 over the control but −1.2 under the original, because the fine-tuning loss above outweighs the transfer.
+  - **Conclusion:** targeted augmentation works strongly for the corruption families it contains. Broad augmentation with different families gives some transfer, to blur and compression, but not a general robustness gain.
+- Outputs: `reports/finetune_seeds.csv`, `reports/robustness.csv` (10 models), `results/finetune/*-74187/`, `results/clrernet_ft_*_s{1,2}/` and `results/clrernet_ft_broad/official_eval/`. The 5-model robustness files are kept as `*_5models.*`.
 
 ## 8. Dashcam baseline (Phase E)
 
@@ -319,9 +362,9 @@ All failed runs, logs and earlier results are preserved. Edited scripts keep `.b
 - **Robustness:**
   - the corruptions are synthetic;
   - images are decoded with OpenCV for all models; for UFLDv2 this differs from the author's PIL loader by a median 0.08 px, but occasionally flips an anchor.
-- **Fine-tune (§7.1):**
-  - one seed per arm, no spread;
-  - the training and test corruptions share families (different implementations), and the one held-out corruption shows no gain;
+- **Fine-tune (§7.1–7.2):**
+  - three seeds for control and corruption, but one seed for the broad arm;
+  - the training and test corruptions share families (different implementations); held-out corruptions show only partial transfer;
   - the fine-tuned model was not re-timed or run on the dashcam clip.
 - **Unverified video detail:** the crop band position comes from predicted-lane vanishing points of the baseline. It is label-free but not verified against camera calibration.
 - **Not done:** a separate `literature` FPS table, and video throughput on more than one clip.
@@ -351,6 +394,8 @@ condor_submit jobs/extras/cpu_housekeeping.sub                          # enviro
 condor_submit jobs/finetune/frame_diffs_chunks.sub                      # train-set frame differences, 8 chunks (then frame_diffs_merge.sub)
 condor_submit jobs/finetune/ft_full.sub                                 # CLRerNet fine-tunes: control + corruption (job 73992)
 condor_submit_dag jobs/ft_dag/ft_eval.dag                               # fine-tune test + robustness inference, then scoring
+condor_submit jobs/finetune/ft_overnight.sub                            # seeds 1-2 for both arms + broad arm (job 74187)
+bash scripts/make_ft2_dag.sh <ClusterId> && condor_submit_dag jobs/ft_dag2/ft2_eval.dag   # their evaluation + parallel scoring
 ```
 
 SCNN and UFLDv2 full inference use `scripts/gpu_entry.sh <model> full` (jobs 73765, 73755). Every job writes `.out`, `.err` and `.log` under `logs/` and its results to a timestamped run directory.
@@ -364,7 +409,7 @@ SCNN and UFLDv2 full inference use `scripts/gpu_entry.sh <model> full` (jobs 737
 | Failure gallery | `results/failure_gallery/`, `reports/failure_gallery_summary.json` |
 | Speed | `reports/speed.csv`, `results/speed/run_*-73930/`, `results/speed/cublas_ab_73932/` |
 | Robustness | `reports/robustness.csv`, `reports/robustness_summary.json`, `results/robustness/full_20261119T154132Z/` |
-| Fine-tuning | `reports/finetune_comparison.csv`, `configs_ft/`, `results/finetune/`, `results/clrernet_ft_{control,corrupt}/official_eval/`, `patches/clrernet_finetune.md` |
+| Fine-tuning | `reports/finetune_seeds.csv`, `reports/finetune_comparison.csv`, `configs_ft/`, `results/finetune/`, `results/clrernet_ft_{control,corrupt}/official_eval/`, `patches/clrernet_finetune.md` |
 | Dashcam | `results/dashcam/`, `results/comparison/*_v3/`, `results/adapter_v2/crop_calibration.json` |
 | Ablation | `reports/ablation_temporal_crop_adapter.csv`, `reports/ablation_temporal.csv`, `reports/ablation_temporal_v2_predcalib.csv`, `reports/b1_calibration_pred_val.json`, `results/ablation/fix_*_73921/` |
 | Environment and dataset | `reports/environment_manifest.json`, `reports/annotations_new_comparison.json` |

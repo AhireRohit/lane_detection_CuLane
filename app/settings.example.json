@@ -1,0 +1,4 @@
+{
+  "host": "<cluster-user>@<login-node>",
+  "root": "/path/to/Lane_Detection/benchmark_culane"
+}

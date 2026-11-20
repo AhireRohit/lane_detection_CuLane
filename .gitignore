@@ -13,3 +13,7 @@ vendors/
 *.png
 __pycache__/
 *.pyc
+
+# demo app: local settings (your login) and downloaded results
+app/settings.json
+app/runs/

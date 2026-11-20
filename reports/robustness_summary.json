@@ -17,9 +17,9 @@
       "mean_relative_f1": 0.8039599999999998,
       "per_corruption_mean_f1": {
         "jpeg": 58.86000000000001,
-        "motion_blur": 54.02333333333333,
         "rain": 32.156666666666666,
         "shadow": 68.20666666666666,
+        "motion_blur": 54.02333333333333,
         "dark": 67.21666666666668
       }
     },
@@ -29,9 +29,9 @@
       "mean_relative_f1": 0.8477133333333333,
       "per_corruption_mean_f1": {
         "jpeg": 66.14333333333333,
-        "motion_blur": 59.699999999999996,
         "rain": 48.25666666666667,
         "shadow": 74.95,
+        "motion_blur": 59.699999999999996,
         "dark": 73.09333333333332
       }
     },
@@ -41,9 +41,9 @@
       "mean_relative_f1": 0.8877066666666666,
       "per_corruption_mean_f1": {
         "jpeg": 68.77999999999999,
-        "motion_blur": 70.43,
         "rain": 61.36666666666667,
         "shadow": 81.25,
+        "motion_blur": 70.43,
         "dark": 80.99666666666667
       }
     },
@@ -53,9 +53,9 @@
       "mean_relative_f1": 0.8651599999999998,
       "per_corruption_mean_f1": {
         "jpeg": 65.29333333333334,
-        "motion_blur": 68.42999999999999,
         "rain": 56.026666666666664,
         "shadow": 80.77,
+        "motion_blur": 68.42999999999999,
         "dark": 80.51
       }
     },
@@ -65,10 +65,70 @@
       "mean_relative_f1": 0.9540866666666666,
       "per_corruption_mean_f1": {
         "jpeg": 74.35333333333334,
-        "motion_blur": 72.00666666666667,
         "rain": 78.88333333333334,
         "shadow": 80.73,
+        "motion_blur": 72.00666666666667,
         "dark": 80.69666666666666
+      }
+    },
+    "clrernet_ft_broad": {
+      "clean_f1": 81.27627999010635,
+      "mean_corrupted_f1": 71.31666666666665,
+      "mean_relative_f1": 0.8774599999999999,
+      "per_corruption_mean_f1": {
+        "jpeg": 67.34333333333333,
+        "rain": 54.73666666666666,
+        "shadow": 80.87666666666667,
+        "motion_blur": 72.87,
+        "dark": 80.75666666666666
+      }
+    },
+    "clrernet_ft_control_s1": {
+      "clean_f1": 81.19451170298626,
+      "mean_corrupted_f1": 70.00266666666667,
+      "mean_relative_f1": 0.8621533333333334,
+      "per_corruption_mean_f1": {
+        "jpeg": 64.7,
+        "rain": 55.666666666666664,
+        "shadow": 80.71999999999998,
+        "motion_blur": 68.51666666666667,
+        "dark": 80.41000000000001
+      }
+    },
+    "clrernet_ft_control_s2": {
+      "clean_f1": 81.31297521172034,
+      "mean_corrupted_f1": 70.29133333333333,
+      "mean_relative_f1": 0.8644666666666667,
+      "per_corruption_mean_f1": {
+        "jpeg": 65.25666666666667,
+        "rain": 56.10333333333333,
+        "shadow": 80.83666666666666,
+        "motion_blur": 68.64,
+        "dark": 80.62
+      }
+    },
+    "clrernet_ft_corrupt_s1": {
+      "clean_f1": 81.1124845488257,
+      "mean_corrupted_f1": 77.546,
+      "mean_relative_f1": 0.9560266666666667,
+      "per_corruption_mean_f1": {
+        "jpeg": 74.55,
+        "rain": 79.25666666666666,
+        "shadow": 80.77,
+        "motion_blur": 72.40333333333334,
+        "dark": 80.75
+      }
+    },
+    "clrernet_ft_corrupt_s2": {
+      "clean_f1": 81.09548299151125,
+      "mean_corrupted_f1": 77.43599999999999,
+      "mean_relative_f1": 0.9548800000000001,
+      "per_corruption_mean_f1": {
+        "jpeg": 74.39999999999999,
+        "rain": 79.11,
+        "shadow": 80.68666666666667,
+        "motion_blur": 72.12666666666668,
+        "dark": 80.85666666666667
       }
     }
   }

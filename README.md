@@ -54,18 +54,30 @@ Rain and heavy motion blur are the most damaging corruptions. Heavy JPEG compres
 
 ### Corruption-augmented fine-tuning (CLRerNet, 3 epochs from the released checkpoint)
 
-Two runs with identical settings. The **control** uses the authors' training recipe; the **corruption** run adds one random corruption (rain, motion blur, JPEG or darkening) to half of the training images. The shadow corruption was held out of training. The last-epoch checkpoint was used, with no selection, and the test set was scored once.
+Runs with identical settings except for augmentation:
+- the **control** uses the authors' training recipe;
+- the **corruption** run adds one random corruption (rain, motion blur, JPEG or darkening) to half of the training images;
+- the **broad** run instead adds one of 7 corruption types that never appear in the test set.
 
-| | Original | Fine-tuned control | Fine-tuned with corruptions |
-|---|---|---|---|
-| CULane test F1 (34,680 images) | 81.55 | 81.30 | 81.18 |
-| Mean F1 over 15 corrupted conditions | 72.56 | 70.21 | **77.33** |
-| Share of clean F1 kept | 88.8% | 86.5% | **95.4%** |
-| Heavy rain (1,500 streaks) | 46.41 | 39.05 | **77.06** |
-| JPEG quality 5 | 47.83 | 39.90 | **64.24** |
-| Shadow, mean of 3 severities (held out) | 81.25 | 80.77 | 80.73 |
+The shadow corruption was never trained on. The last-epoch checkpoint was used, with no selection, and the test set was scored once.
 
-Robustness to the trained corruption families improves a lot (+4.8 mean F1, heavy rain +30.7), at a cost of 0.37 clean test F1. The held-out shadow corruption shows no gain, so this is not evidence of generalisation to new kinds of corruption. Each arm was trained once (single seed). Details: §7.1 of the report and `reports/finetune_comparison.csv`.
+Control and corruption runs: mean ± standard deviation over 3 seeds.
+
+| | Original | Fine-tuned control | Fine-tuned with corruptions | Broad augmentation (1 seed) |
+|---|---|---|---|---|
+| CULane test F1 (34,680 images) | 81.55 | 81.27 ± 0.10 | 81.23 ± 0.05 | 81.32 |
+| Mean F1 over 15 corrupted conditions | 72.56 | 70.17 ± 0.15 | **77.44 ± 0.11** | 71.32 |
+| Share of clean F1 kept | 88.8% | 86.4% | **95.5%** | 87.8% |
+| Heavy rain (1,500 streaks) | 46.41 | 38.69 ± 0.33 | **77.38 ± 0.32** | 37.44 |
+| JPEG quality 5 | 47.83 | 39.18 ± 0.78 | **64.15 ± 0.17** | 45.37 |
+| Motion blur 25 px | 55.92 | 52.18 ± 0.08 | 60.55 ± 0.59 | **62.93** |
+| Shadow, mean of 3 severities (never trained on) | 81.25 | 80.78 ± 0.06 | 80.73 ± 0.04 | 80.88 |
+
+- **Corruption training gives a large, reproducible gain on the corruption families it trains on:** +4.9 mean F1 over the original, and heavy rain +31.
+- **Clean accuracy:** it costs nothing measurable against the control (−0.04 test F1). The 0.3 drop from the original comes from fine-tuning itself.
+- **Broad augmentation** with 7 different corruption types (fog, snow, glare, noise, low contrast, colour cast) transfers only partly to unseen ones: motion blur +4.3 and JPEG +2.3, but rain −1.2 and shadow unchanged.
+
+Details: §7.1–7.2 of the report and `reports/finetune_seeds.csv`.
 
 ### Dashcam video and temporal tracking
 
@@ -74,6 +86,23 @@ Robustness to the trained corruption families improves a lot (+4.8 mean F1, heav
 - **Geometry filter:** tested with three calibrations and not adopted, because it removed real lanes.
 
 Full write-up: [`reports/FINAL_REPORT.md`](reports/FINAL_REPORT.md).
+
+## Demo app
+
+`app/streamlit_app.py` is a small web app:
+1. Pick one or more models: CLRerNet, the robust fine-tuned CLRerNet, UFLDv2 or SCNN.
+2. Upload a dashcam image or video.
+3. Click **Generate**.
+
+The app shows the detected lanes drawn on the image or video, with download buttons and per-model statistics. Inference runs on a cluster GPU through HTCondor (`jobs/app/infer.sub` → `scripts/app_job.sh` → `scripts/app_infer.py`), using the same model code as the benchmark, the vanishing-point crop adapter and, for videos, the temporal tracker. Your machine only needs SSH key login to the cluster and, ideally, `ffmpeg`.
+
+```bash
+pip install -r app/requirements.txt
+cp app/settings.example.json app/settings.json   # fill in your login and the remote benchmark_culane path
+streamlit run app/streamlit_app.py
+```
+
+Uploaded media have no labels, so the app shows detections and stability statistics, not accuracy.
 
 ## Repository layout
 
@@ -85,6 +114,7 @@ Full write-up: [`reports/FINAL_REPORT.md`](reports/FINAL_REPORT.md).
 | `reports/` | result tables (CSV/JSON) and the full report |
 | `patches/` | notes on every environment fix and correction, with evidence |
 | `cluster_runs/` | one-off rerun wrappers kept for provenance |
+| `app/` | Streamlit demo app and its cluster backend |
 
 ## Reproducing
 
