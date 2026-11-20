@@ -1,0 +1,18 @@
+# Download the TuSimple test set to datasets/TuSimple (CPU, network). Arg: label | clips
+universe = docker
+docker_image = python:3.10
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/download_tusimple.sh $(mode)
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/tusimple/download_$(mode).$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/tusimple/download_$(mode).$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/tusimple/tusimple.$(ClusterId).log
+should_transfer_files = NO
+request_cpus = 2
+request_memory = 2G
+request_disk = 2G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+mode = clips
+queue 1

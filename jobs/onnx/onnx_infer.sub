@@ -1,0 +1,43 @@
+# Full CULane test inference for each ONNX variant, 8 chunks each (scripts/onnx_clrernet.py infer). No GPU.
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/onnx_job.sh infer $(variant) $(chunk) 8
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/onnx/infer_$(variant)_$(chunk).$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/onnx/infer_$(variant)_$(chunk).$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/onnx/onnx.$(ClusterId).log
+environment = "OMP_NUM_THREADS=4"
+should_transfer_files = NO
+request_cpus = 4
+request_memory = 8G
+request_disk = 4G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue variant, chunk from (
+  onnx_fp32, 0
+  onnx_fp32, 1
+  onnx_fp32, 2
+  onnx_fp32, 3
+  onnx_fp32, 4
+  onnx_fp32, 5
+  onnx_fp32, 6
+  onnx_fp32, 7
+  int8_all, 0
+  int8_all, 1
+  int8_all, 2
+  int8_all, 3
+  int8_all, 4
+  int8_all, 5
+  int8_all, 6
+  int8_all, 7
+  int8_bbneck, 0
+  int8_bbneck, 1
+  int8_bbneck, 2
+  int8_bbneck, 3
+  int8_bbneck, 4
+  int8_bbneck, 5
+  int8_bbneck, 6
+  int8_bbneck, 7
+)

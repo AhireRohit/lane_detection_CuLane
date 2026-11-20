@@ -1,0 +1,29 @@
+# Cross-dataset (TuSimple test) evaluation of CULane-trained models; --clips adds the 20 fps tracker test.
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/run_tusimple_eval.sh $(tag) $(model) $(ckpt) $(extra)
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/tusimple/eval_$(tag).$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/tusimple/eval_$(tag).$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/tusimple/tusimple.$(ClusterId).log
+should_transfer_files = NO
+request_GPUs = 1
+request_CPUs = 4
+request_memory = 16G
+request_disk = 4G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue tag, model, ckpt, extra from (
+  scnn, scnn, released, --clips
+  ufldv2, ufldv2, released, --clips
+  clrernet, clrernet, released, --clips
+  ft_control_s0, clrernet, /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_control_20261119T181813Z_<cluster-user>-73992/epoch_3.pth, --none
+  ft_control_s1, clrernet, /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_control_s1_20261120T010825Z_<cluster-user>-74187/epoch_3.pth, --none
+  ft_control_s2, clrernet, /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_control_s2_20261120T010825Z_<cluster-user>-74187/epoch_3.pth, --none
+  ft_corrupt_s0, clrernet, /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_corrupt_20261119T181814Z_<cluster-user>-73992/epoch_3.pth, --none
+  ft_corrupt_s1, clrernet, /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_corrupt_s1_20261120T010825Z_<cluster-user>-74187/epoch_3.pth, --none
+  ft_corrupt_s2, clrernet, /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_corrupt_s2_20261120T010825Z_<cluster-user>-74187/epoch_3.pth, --none
+  ft_broad_s0, clrernet, /path/to/Lane_Detection/benchmark_culane/results/finetune/clrernet_ft_broad_20261120T010825Z_<cluster-user>-74187/epoch_3.pth, --none
+)
