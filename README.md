@@ -1,5 +1,7 @@
 # CULane Lane-Detection Benchmark & Robustness Study
 
+**[Live demo](https://lanedetectionculane.streamlit.app/)**: upload a dashcam image or short video and run CLRerNet (pretrained or our robust fine-tune), UFLDv2 or SCNN on free CPU, in the browser. The first visit after a restart takes a few minutes to set up. Code: [`streamlit_cloud/`](streamlit_cloud/).
+
 A reproducible benchmark of three **pretrained** lane detectors on the full CULane test set, run on an HTCondor GPU cluster. It covers:
 - reproducing the published accuracy;
 - a single, shared evaluation protocol;
