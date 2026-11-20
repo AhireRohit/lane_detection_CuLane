@@ -11,6 +11,8 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent                      # repository root: scripts/, config/, vendors/ (cloned), checkpoints/ (downloaded)
 SCRIPTS = REPO / 'scripts'
 JOBS = Path(os.environ.get('LANE_JOBS', '/tmp/lane_jobs'))
+ENV_DIR = Path(os.environ.get('LANE_ENV', REPO / '.demo_env'))   # models' own Python 3.11 env (setup_demo.sh)
+PY = ENV_DIR / 'bin' / 'python'
 ROBUST_CKPT = REPO / 'checkpoints' / 'clrernet' / 'clrernet_culane_dla34_robust_ft.pth'
 MAX_S, FPS_CAP = 10, 10
 MODELS = {   # key: (label, note, checkpoint files it needs)
@@ -24,15 +26,31 @@ IMAGE_EXT = {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}
 VIDEO_EXT = {'.mp4', '.mov', '.avi', '.mkv', '.m4v', '.webm'}
 
 
+def _uv():
+    try:
+        from uv import find_uv_bin   # the uv package from requirements.txt
+        return find_uv_bin()
+    except Exception:
+        return shutil.which('uv') or 'uv'
+
+
 def setup():
-    """Clone the model code at the pinned commits and fetch checkpoints (sha256-checked). Returns the usable models."""
+    """Build the models' Python 3.11 env, clone the model code at the pinned commits and fetch checkpoints
+    (sha256-checked). Returns the usable models."""
     ok = REPO / '.demo_setup_ok'
     if not ok.exists():
-        r = subprocess.run(['bash', str(HERE / 'setup_demo.sh')], cwd=REPO, capture_output=True, text=True)
+        r = subprocess.run(['bash', str(HERE / 'setup_demo.sh')], cwd=REPO, capture_output=True, text=True,
+                           env=dict(os.environ, LANE_ENV=str(ENV_DIR), UV_BIN=_uv()))
         (REPO / 'demo_setup.log').write_text(r.stdout + r.stderr)
         if r.returncode == 0: ok.touch()
     have = lambda f: (REPO / 'checkpoints' / f).is_file()
-    return [k for k, v in MODELS.items() if all(have(f) for f in v[2]) and (REPO / 'vendors').is_dir()]
+    return [k for k, v in MODELS.items() if all(have(f) for f in v[2]) and (REPO / 'vendors').is_dir() and PY.is_file()]
+
+
+def setup_log(n=3000):
+    try: return (REPO / 'demo_setup.log').read_text()[-n:]
+    except OSError: return ''
+
 
 
 def _ff():
@@ -81,7 +99,7 @@ def run_job(data, name, models, adapter='auto', tracker=True, progress=lambda fr
         env = dict(os.environ, LANE_DEVICE='cpu', PYTHONPATH=str(REPO / 'vendors' / 'clrernet'))
         if m == 'clrernet_robust': env['CLR_CKPT'] = str(ROBUST_CKPT)
         with open(job / f'log_{m}.txt', 'w') as log:
-            p = subprocess.Popen([sys.executable, str(SCRIPTS / 'app_infer.py'), str(job), m], cwd=SCRIPTS, env=env,
+            p = subprocess.Popen([str(PY), str(SCRIPTS / 'app_infer.py'), str(job), m], cwd=SCRIPTS, env=env,
                                  stdout=log, stderr=subprocess.STDOUT)
             while p.poll() is None:
                 time.sleep(1.0)

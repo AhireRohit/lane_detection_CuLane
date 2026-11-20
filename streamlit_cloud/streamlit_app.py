@@ -28,7 +28,9 @@ st.write('Pick models, upload a dashcam **image** or a short **video**, and clic
          '[Code, benchmark and full report on GitHub](https://github.com/AhireRohit/lane_detection_CuLane).')
 available = ready_models()
 if not available:
-    st.error('Model setup failed. Please try again later.'); st.stop()
+    st.error('Model setup failed. Please try again later.')
+    with st.expander('Setup log'): st.code(core.setup_log())
+    st.stop()
 missing = [core.MODELS[k][0] for k in core.MODELS if k not in available]
 if missing: st.warning('Not available right now (checkpoint download failed): ' + ', '.join(missing))
 

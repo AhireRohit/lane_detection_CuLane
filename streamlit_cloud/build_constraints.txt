@@ -1,0 +1,2 @@
+# albumentations 0.4.6 ships only as a source package whose setup.py imports pkg_resources, which recent setuptools removed.
+setuptools<70

@@ -1,34 +1,5 @@
-# Streamlit Community Cloud: choose Python 3.10 or 3.11 under "Advanced settings" when deploying
-# (the default, 3.12+, has no torch 2.1.2 / MMCV 2.1.0 wheels).
-# Same CPU environment as the verified Space (hf_space/requirements.txt, hf_space/VERIFICATION.md); torch and MMCV are
-# pinned to exact wheel URLs so no package index can substitute another build.
-torch @ https://download.pytorch.org/whl/cpu/torch-2.1.2%2Bcpu-cp310-cp310-linux_x86_64.whl ; python_version == "3.10"
-torch @ https://download.pytorch.org/whl/cpu/torch-2.1.2%2Bcpu-cp311-cp311-linux_x86_64.whl ; python_version == "3.11"
-torchvision @ https://download.pytorch.org/whl/cpu/torchvision-0.16.2%2Bcpu-cp310-cp310-linux_x86_64.whl ; python_version == "3.10"
-torchvision @ https://download.pytorch.org/whl/cpu/torchvision-0.16.2%2Bcpu-cp311-cp311-linux_x86_64.whl ; python_version == "3.11"
-mmcv @ https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/mmcv-2.1.0-cp310-cp310-manylinux1_x86_64.whl ; python_version == "3.10"
-mmcv @ https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/mmcv-2.1.0-cp311-cp311-manylinux1_x86_64.whl ; python_version == "3.11"
-mmengine==0.10.4
-mmdet==3.3.0
-numpy==1.26.4
-opencv-python-headless==4.10.0.84
-# imgaug requires the GUI build; same OpenCV version (needs libgl1 from packages.txt)
-opencv-python==4.10.0.84
-scipy==1.13.1
-Pillow==10.3.0
-albumentations==0.4.6
-imgaug==0.4.0
-shapely==2.1.2
-scikit-image==0.25.2
-pycocotools==2.0.8
-terminaltables==3.1.10
-addict==2.4.0
-pathspec==0.12.1
-imagesize==1.4.1
-ujson==5.10.0
-scikit-learn==1.5.2
-tensorboard==2.17.1
-tqdm==4.66.5
-p_tqdm==1.4.2
-gdown==5.2.0
-streamlit==1.40.2
+# Streamlit Community Cloud host environment: just the web UI, on whatever Python the platform picks (default 3.14).
+# The models run in their own pinned Python 3.11 environment (model_env.txt), which setup_demo.sh builds with uv on
+# first start, because torch 2.1.2 / MMCV 2.1.0 have no wheels for newer Pythons.
+streamlit==1.50.0
+uv>=0.8

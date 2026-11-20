@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 # One-time setup for the public demo, run from the repository root by demo_core.setup():
-# model repos at the pinned commits (unmodified) and checkpoints, each verified by sha256. A model whose checkpoint
-# cannot be fetched (e.g. Google Drive rate limits) is skipped; the app then offers only the models that are ready.
+# the models' own Python 3.11 environment (model_env.txt, built with uv whatever Python the host runs), model repos at
+# the pinned commits (unmodified) and checkpoints, each verified by sha256. A model whose checkpoint cannot be fetched
+# (e.g. Google Drive rate limits) is skipped; the app then offers only the models that are ready.
+# Env: LANE_ENV (environment dir, default .demo_env), UV_BIN (uv executable, default uv on PATH).
 set -uo pipefail
-B="$PWD"
+B="$PWD"; S="$B/streamlit_cloud"
+ENV_DIR="${LANE_ENV:-$B/.demo_env}"; PY="$ENV_DIR/bin/python"; UV="${UV_BIN:-uv}"
+want="$(sha256sum "$S/model_env.txt" "$S/build_constraints.txt" | sha256sum | cut -c1-16)"
+if [[ "$(cat "$ENV_DIR/.built" 2>/dev/null)" != "$want" ]]; then
+  echo "building model environment in $ENV_DIR"; rm -rf "$ENV_DIR"
+  "$UV" venv --quiet --python 3.11 "$ENV_DIR" || exit 3
+  "$UV" pip install --quiet --python "$PY" --build-constraints "$S/build_constraints.txt" -r "$S/model_env.txt" || exit 3
+  "$PY" -c 'import torch, torchvision, mmcv, mmdet, cv2, albumentations; print("torch", torch.__version__, "mmcv", mmcv.__version__)' || exit 3
+  echo "$want" > "$ENV_DIR/.built"
+fi
 mkdir -p "$B/vendors" "$B/checkpoints/scnn" "$B/checkpoints/ufldv2" "$B/checkpoints/clrernet"
 clone() {   # name url sha
   [[ "$(git -C "$B/vendors/$1" rev-parse HEAD 2>/dev/null)" == "$3" ]] && return 0
@@ -26,8 +37,8 @@ fetch $C/clrernet/clrernet_culane_dla34_ema.pth cce8b552bc8301e31186da192fe42130
 fetch $C/clrernet/clrernet_culane_dla34_robust_ft.pth a90b78d306a510ee4cd775239c6a68e0eb01a0aa163a849daf03e480abcfa174 \
   curl -sSfL -o $C/clrernet/clrernet_culane_dla34_robust_ft.pth https://huggingface.co/spaces/roh24/culane_lane_detection/resolve/main/weights/clrernet_culane_dla34_robust_ft.pth
 fetch $C/ufldv2/culane_res34.pth 1b4ca8385122f74c46a2e274950cdb5eb132ff97aa1ab1311550526d83caebf6 \
-  gdown --quiet 1AjnvAD3qmqt_dGPveZJsLZ1bOyWv62Yj -O $C/ufldv2/culane_res34.pth
+  "$PY" -m gdown --quiet 1AjnvAD3qmqt_dGPveZJsLZ1bOyWv62Yj -O $C/ufldv2/culane_res34.pth
 fetch $C/scnn/vgg_SCNN_DULR_w9.pth 07c0c768dc435b8b162b58f42c7f686656133e0b13b8b4f110214245edb16671 \
-  gdown --quiet 1bBdN3yhoOQBC9pRtBUxzeRrKJdF7uVTJ -O $C/scnn/vgg_SCNN_DULR_w9.pth
+  "$PY" -m gdown --quiet 1bBdN3yhoOQBC9pRtBUxzeRrKJdF7uVTJ -O $C/scnn/vgg_SCNN_DULR_w9.pth
 ls -la $C/*/
 echo "DEMO SETUP DONE"
