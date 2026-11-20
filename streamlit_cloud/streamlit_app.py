@@ -68,8 +68,14 @@ st.caption(f'Free shared CPU: about 0.25 s per frame for CLRerNet, ~1 s for SCNN
            f'to {core.MAX_S} s at {core.FPS_CAP} fps. Uploads are processed only for your request and deleted within an '
            'hour. Your media has no labels, so the numbers below are detections and stability, not accuracy.')
 
-src = (up.getvalue(), up.name) if up else ((core.sample(st.session_state.sample), st.session_state.sample)
-                                           if st.session_state.sample else None)
+src = None
+if up:
+    src = (up.getvalue(), up.name)
+elif st.session_state.sample:
+    try:
+        src = (core.sample(st.session_state.sample), st.session_state.sample)
+    except Exception as e:   # show the reason (Streamlit Cloud redacts uncaught errors)
+        st.error(f'The sample could not be prepared: {e}'); st.session_state.sample = None
 if st.button('Generate', type='primary', disabled=not (src and chosen)):
     bar = st.progress(0.0, text='Starting…')
     lock = job_lock()
