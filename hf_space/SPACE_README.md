@@ -3,8 +3,10 @@ title: Lane Detection Demo
 emoji: 🛣️
 colorFrom: gray
 colorTo: green
-sdk: docker
-app_port: 8501
+sdk: gradio
+sdk_version: 4.44.1
+python_version: "3.10"
+app_file: app.py
 pinned: false
 license: other
 short_description: SCNN, UFLDv2, CLRerNet and a robust CLRerNet fine-tune on CPU
@@ -19,7 +21,7 @@ Upload a dashcam image or short video and compare four CULane lane detectors:
 - **CLRerNet with our corruption-augmented fine-tune**, which is more robust to rain, blur, JPEG compression and darkness: mean corrupted-image F1 77.4 ± 0.1 against 72.6, over 3 seeds.
 
 **How it works**
-- Inference runs on CPU with the same code as the GPU benchmark.
+- Inference runs on CPU with the same code as the GPU benchmark. On first start the Space downloads the model code (pinned commits) and the authors' checkpoints and checks their sha256.
 - [VERIFICATION.md](VERIFICATION.md) shows that the CPU path reproduces the GPU predictions behind the reported numbers.
 - The full benchmark, report and code are in the GitHub repository.
 

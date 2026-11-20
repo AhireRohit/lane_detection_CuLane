@@ -1,4 +1,4 @@
-# CPU environment for the Hugging Face Space (Python 3.10). Versions match the cluster venvs
+# CPU environment for the Hugging Face Space (Gradio SDK, Python 3.10; gradio itself comes from sdk_version in README). Versions match the cluster venvs
 # (reports/environment_manifest.json) except torch: MMCV 2.1.0 CPU wheels exist for torch 2.1, not 2.3.
 # The CPU path is checked against the GPU predictions by scripts/verify_cpu.py (see hf_space/VERIFICATION.md).
 --extra-index-url https://download.pytorch.org/whl/cpu
@@ -10,6 +10,8 @@ mmengine==0.10.4
 mmdet==3.3.0
 numpy==1.26.4
 opencv-python-headless==4.10.0.84
+# imgaug requires the GUI build; pin it to the same OpenCV version (needs libgl1 from packages.txt)
+opencv-python==4.10.0.84
 scipy==1.13.1
 Pillow==10.3.0
 albumentations==0.4.6
@@ -25,5 +27,13 @@ ujson==5.10.0
 scikit-learn==1.5.2
 tensorboard==2.17.1
 tqdm==4.66.5
-streamlit==1.40.2
+p_tqdm==1.4.2
 gdown==5.2.0
+# Gradio 4.44.1 (sdk_version) needs its own era of web/Hub libraries; newer ones break it (e.g. HfFolder was removed from
+# huggingface_hub 1.x). Pinned to versions released alongside it.
+huggingface_hub==0.26.5
+pydantic==2.10.6
+fastapi==0.115.6
+starlette==0.41.3
+uvicorn==0.32.1
+httpx==0.27.2

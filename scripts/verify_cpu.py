@@ -47,24 +47,38 @@ def read_lines(p):
     return lanes
 
 
+def _pt_to_polyline(p, L):
+    """Euclidean distance from points p (n,2) to the polyline L (m,2)."""
+    if len(L) == 1: return np.linalg.norm(p - L[0], axis=1)
+    a, b = L[:-1], L[1:]; ab = b - a; den = np.maximum((ab ** 2).sum(1), 1e-12)
+    t = np.clip(((p[:, None, :] - a[None]) * ab[None]).sum(2) / den[None], 0, 1)
+    return np.linalg.norm(p[:, None, :] - (a[None] + t[..., None] * ab[None]), axis=2).min(1)
+
+
 def lane_diff(a, b):
-    """max |x difference| over the rows both lanes cover (x interpolated in y); inf if they share < 3 rows."""
-    a = a[np.argsort(a[:, 1])]; b = b[np.argsort(b[:, 1])]
-    lo, hi = max(a[0, 1], b[0, 1]), min(a[-1, 1], b[-1, 1])
-    ys = b[(b[:, 1] >= lo) & (b[:, 1] <= hi), 1]
-    if len(ys) < 3: return np.inf
-    return float(np.max(np.abs(np.interp(ys, a[:, 1], a[:, 0]) - np.interp(ys, b[:, 1], b[:, 0]))))
+    """Symmetric max point-to-curve distance (px) between two lanes. Works for any lane direction: UFLDv2's side lanes
+    are column-anchored (x fixed, y predicted), where comparing x at equal y would blow up small differences."""
+    a = np.asarray(a, float); b = np.asarray(b, float)
+    return float(max(_pt_to_polyline(a, b).max(), _pt_to_polyline(b, a).max()))
+
+
+def shape_diff(a, b):
+    """One-sided version: how far the points of either lane lie from the other's curve, whichever fits better
+    (ignores a lane being drawn a little longer or shorter)."""
+    a = np.asarray(a, float); b = np.asarray(b, float)
+    return float(min(_pt_to_polyline(a, b).max(), _pt_to_polyline(b, a).max()))
 
 
 def compare(cpu, gpu):
     """Greedy one-to-one matching of lanes by max x difference; returns (same_count, max diff over matched lanes)."""
-    if len(cpu) != len(gpu): return False, np.inf
-    if not cpu: return True, 0.0
+    if len(cpu) != len(gpu): return False, np.inf, np.inf
+    if not cpu: return True, 0.0, 0.0
     C = np.array([[lane_diff(np.asarray(c, float), g) for g in gpu] for c in cpu])
-    used, worst = set(), 0.0
+    used, worst, shape = set(), 0.0, 0.0
     for i in np.argsort(C.min(1)):
-        j = min((j for j in range(len(gpu)) if j not in used), key=lambda j: C[i, j]); used.add(j); worst = max(worst, C[i, j])
-    return True, worst
+        j = min((j for j in range(len(gpu)) if j not in used), key=lambda j: C[i, j]); used.add(j)
+        worst = max(worst, C[i, j]); shape = max(shape, shape_diff(cpu[i], gpu[j]))
+    return True, worst, shape
 
 
 def e2e(model, n, outp):
@@ -79,14 +93,17 @@ def e2e(model, n, outp):
         img = cv2.imread(str(D / rel))
         t = time.perf_counter(); lanes = [l for l in post(fwd(pre(img))) if len(l) > 1]; ms = 1000 * (time.perf_counter() - t)
         gpu = read_lines(root / (rel[:-4] + '.lines.txt'))
-        same, worst = compare(lanes, gpu)
-        rows.append(dict(img=rel, cpu_lanes=len(lanes), gpu_lanes=len(gpu), same_count=same, max_px=worst, ms=round(ms, 1)))
+        same, worst, shape = compare(lanes, gpu)
+        rows.append(dict(img=rel, cpu_lanes=len(lanes), gpu_lanes=len(gpu), same_count=same, max_px=worst, shape_px=shape, ms=round(ms, 1)))
         if k % 25 == 0: print(model, k, len(lanes), len(gpu), round(worst, 3), round(ms), flush=True)
-    px = np.array([r['max_px'] for r in rows if r['same_count']])
+    px = np.array([r['max_px'] for r in rows if r['same_count']]); sp = np.array([r['shape_px'] for r in rows if r['same_count']])
     res = dict(model=model, images=len(rows), gpu_predictions=str(root), torch=torch.__version__,
                same_lane_count=float(np.mean([r['same_count'] for r in rows])),
                max_px_median=float(np.median(px)) if len(px) else None, max_px_p95=float(np.percentile(px, 95)) if len(px) else None,
                within_1px=float(np.mean(px <= 1.0)) if len(px) else None, within_5px=float(np.mean(px <= 5.0)) if len(px) else None,
+               shape_px_median=float(np.median(sp)) if len(sp) else None, shape_px_p95=float(np.percentile(sp, 95)) if len(sp) else None,
+               shape_within_5px=float(np.mean(sp <= 5.0)) if len(sp) else None,
+               metric='max point-to-curve distance between matched lanes, in 1640x590 px (shape_*: one-sided, ignores lane length)',
                cpu_ms_median=float(np.median([r['ms'] for r in rows])), wall_s=round(time.time() - t0),
                mismatched=[r for r in rows if not r['same_count'] or r['max_px'] > 5][:20])
     Path(outp).write_text(json.dumps(res, indent=2)); print(json.dumps({k: v for k, v in res.items() if k != 'mismatched'}, indent=1))
@@ -117,6 +134,37 @@ def nms_check(n, outp):
     Path(outp).write_text(json.dumps(stats, indent=2)); print(json.dumps(stats, indent=1))
 
 
+def dump(model, n, outp):
+    """Run the demo's builder on the sampled test images on the current device (LANE_DEVICE) and save the lanes."""
+    from app_infer import build
+    import torch
+    if os.environ.get('LANE_DEVICE', 'cuda') == 'cpu': torch.set_num_threads(int(os.environ.get('OMP_NUM_THREADS', '4')))
+    pre, fwd, post, info = build(model, Path(outp).parent / f'work_dump_{model}')
+    with open(outp, 'w') as f:
+        for k, rel in enumerate(sample(n)):
+            lanes = [[[float(x), float(y)] for x, y in l] for l in post(fwd(pre(cv2.imread(str(D / rel))))) if len(l) > 1]
+            f.write(json.dumps(dict(img=rel, lanes=lanes)) + '\n')
+            if k % 50 == 0: print(model, k, len(lanes), flush=True)
+    print('DUMP DONE', model, outp, 'torch', torch.__version__, 'device', os.environ.get('LANE_DEVICE', 'cuda'))
+
+
+def cmp(a_path, b_path, outp):
+    """Compare two dumps image by image (same code and loader; only the device / torch build differs)."""
+    A = [json.loads(l) for l in open(a_path)]; Bd = {r['img']: r['lanes'] for r in map(json.loads, open(b_path))}
+    rows = []
+    for r in A:
+        same, worst, shape = compare(r['lanes'], [np.asarray(l, float) for l in Bd[r['img']]])
+        rows.append(dict(img=r['img'], same_count=same, max_px=worst, shape_px=shape, n=len(r['lanes'])))
+    px = np.array([r['max_px'] for r in rows if r['same_count']])
+    res = dict(a=a_path, b=b_path, images=len(rows), same_lane_count=float(np.mean([r['same_count'] for r in rows])),
+               max_px_median=float(np.median(px)), max_px_p95=float(np.percentile(px, 95)), max_px_max=float(px.max()),
+               within_0p1px=float(np.mean(px <= 0.1)), within_1px=float(np.mean(px <= 1)), within_5px=float(np.mean(px <= 5)),
+               worst=sorted(rows, key=lambda r: -r['max_px'] if r['same_count'] else -1e9)[:10])
+    Path(outp).write_text(json.dumps(res, indent=2)); print(json.dumps({k: v for k, v in res.items() if k != 'worst'}, indent=1))
+
+
 if __name__ == '__main__':
     if sys.argv[1] == 'nms': nms_check(int(sys.argv[2]), sys.argv[3])
+    elif sys.argv[1] == 'dump': dump(sys.argv[2], int(sys.argv[3]), sys.argv[4])
+    elif sys.argv[1] == 'cmp': cmp(sys.argv[2], sys.argv[3], sys.argv[4])
     else: e2e(sys.argv[2], int(sys.argv[3]), sys.argv[4])

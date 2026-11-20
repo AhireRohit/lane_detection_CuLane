@@ -13,6 +13,7 @@ if [[ ! -f $V/.deps_ok ]]; then
   $V/bin/python -c 'import cv2, torch, mmcv, mmdet; print(cv2.__version__, torch.__version__, mmcv.__version__, mmdet.__version__)' || exit 4
   touch $V/.deps_ok
 fi
+$V/bin/pip install -q -r $B/hf_space/requirements.txt && $V/bin/pip uninstall -q -y opencv-python 2>/dev/null; $V/bin/pip install -q --no-deps --force-reinstall opencv-python-headless==4.10.0.84   # top up if requirements changed
 $V/bin/pip freeze > $OUT/pip_freeze.txt
 CKPT=$(ls -1 $B/results/finetune/clrernet_ft_corrupt_2*-73992/epoch_3.pth | head -1)
 export PYTHONPATH="$B/vendors/clrernet:${PYTHONPATH:-}" OMP_NUM_THREADS=2 LANE_DEVICE=cpu

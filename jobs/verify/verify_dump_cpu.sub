@@ -1,0 +1,17 @@
+# CPU dump of the demo builders in the Space environment (pairs with verify_dump_gpu.sub).
+universe = docker
+docker_image = python:3.10-slim
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/verify_dump_job.sh cpu 200
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/verify_dump_cpu.$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/verify_dump_cpu.$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/verify_dump_cpu.$(ClusterId).log
+should_transfer_files = NO
+request_cpus = 8
+request_memory = 24G
+request_disk = 10G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue 1

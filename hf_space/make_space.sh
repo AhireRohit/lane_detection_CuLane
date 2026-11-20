@@ -6,7 +6,7 @@
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"; S="${1:?space dir}"; CK="${2:?robust checkpoint}"
 mkdir -p "$S/benchmark_culane/scripts" "$S/benchmark_culane/config" "$S/weights"
-cp "$REPO"/hf_space/{Dockerfile,app.py,setup_space.sh,requirements.txt,VERIFICATION.md} "$S/"
+cp "$REPO"/hf_space/{app.py,setup_space.sh,requirements.txt,packages.txt,VERIFICATION.md} "$S/"
 cp "$REPO/hf_space/SPACE_README.md" "$S/README.md"
 for f in common.py benchmark_speed.py scnn_infer.py app_infer.py estimate_vp.py temporal_ablation.py nms_cpu.py; do
   cp "$REPO/scripts/$f" "$S/benchmark_culane/scripts/"
