@@ -105,6 +105,30 @@ def test_nms_cpu_suppresses_duplicates_and_keeps_distinct():
     assert keep[:int(n)].tolist() == [3, 0]                         # top_k, in score order
 
 
+def test_nms_cpu_valid_range_matches_row_slicing():
+    """For valid outputs the flat-buffer indexing must equal plain row slicing (the version verified against CUDA)."""
+    torch = pytest.importorskip('torch')
+    nms_cpu = load('nms_cpu')
+    rng = np.random.default_rng(0)
+    for _ in range(200):
+        b = rng.normal(500, 40, (6, 77)).astype(np.float32); b[:, 2] = rng.uniform(0, 1, 6); b[:, 4] = rng.uniform(5, 60, 6)
+        flat = b.reshape(-1)
+        for ra in range(6):
+            for rb in range(6):
+                sa, ea = nms_cpu._span(b[ra]); sb, eb = nms_cpu._span(b[rb])
+                s, e = max(sa, sb), min(ea, eb, 71)
+                ref = e >= s and np.cumsum(np.abs(b[ra, 5 + s:6 + e] - b[rb, 5 + s:6 + e]), dtype=np.float32)[-1] < np.float32(50) * np.float32(e - s + 1)
+                assert nms_cpu._overlaps(flat, ra, rb, sa, ea, sb, eb, 50) == bool(ref)
+
+
+def test_nms_cpu_out_of_range_start_does_not_crash():
+    torch = pytest.importorskip('torch')
+    nms_cpu = load('nms_cpu')
+    boxes = torch.tensor(np.stack([proposal(300, start=-0.3), proposal(301, start=-0.2), proposal(700)]))
+    keep, n, _ = nms_cpu.nms(boxes, torch.tensor([0.9, 0.8, 0.7]), overlap=50, top_k=3)
+    assert 1 <= int(n) <= 3
+
+
 # ---------------- CULane lane files used by the labeled-video tracker test ----------------
 def test_lane_file_round_trip(tmp_path):
     tc = load('tracker_culane')

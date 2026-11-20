@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # GPU job: scripts/tusimple_eval.py for one model/checkpoint, then the official CULane C++ evaluator on its lanes.
-# Usage: run_tusimple_eval.sh <tag> <model: scnn|ufldv2|clrernet> <checkpoint|released> [--clips]
+# Usage: run_tusimple_eval.sh <tag> <model: scnn|ufldv2|clrernet> <checkpoint|released> [--clips | --rescore]
 set -euo pipefail
 B="$(cd "$(dirname "$0")/.." && pwd)"; TAG="$1"; M="$2"; CK="$3"; shift 3
 OUT="$B/results/tusimple/$TAG"; mkdir -p "$OUT"
@@ -9,6 +9,9 @@ source "$B/.venvs/$M/bin/activate"
 if [[ "$M" == clrernet ]]; then
   export CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH="$B/vendors/clrernet:$B/vendors/clrernet/libs/models/layers/nms/src:${PYTHONPATH:-}"
   [[ "$CK" == released ]] || export CLR_CKPT="$CK"
+fi
+if [[ " $* " == *" --rescore "* ]]; then   # keep the v1 CULane-style scores (lone-newline lane files) as backups
+  for f in "$OUT"/culane_eval_*.txt; do [[ "$f" == *_v1_* || -f "${f/culane_eval_/culane_eval_v1_}" ]] || mv "$f" "${f/culane_eval_/culane_eval_v1_}"; done
 fi
 cd "$B/scripts"; python tusimple_eval.py "$M" "$OUT" "$@"
 EVAL="$B/vendors/ufldv2/evaluation/culane/build_conda_gcc/culane_evaluator"; export LD_LIBRARY_PATH="$B/.opencv_cpp/lib:${LD_LIBRARY_PATH:-}"

@@ -1,0 +1,17 @@
+# Re-write lane files from saved predictions and re-run the CULane-style evaluator (no inference, no GPU).
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/run_tusimple_eval.sh $(tag) scnn released --rescore
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/tusimple/rescore_$(tag).$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/tusimple/rescore_$(tag).$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/tusimple/tusimple.$(ClusterId).log
+should_transfer_files = NO
+request_cpus = 1
+request_memory = 2G
+request_disk = 1G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue tag in (scnn, ufldv2, clrernet, ft_control_s0, ft_control_s1, ft_control_s2, ft_corrupt_s0, ft_corrupt_s1, ft_corrupt_s2, ft_broad_s0)

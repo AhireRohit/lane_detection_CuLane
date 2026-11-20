@@ -22,12 +22,18 @@ def _span(row):
     return start, end
 
 
-def _overlaps(a, b, sa, ea, sb, eb, thr):
+def _overlaps(flat, ra, rb, sa, ea, sb, eb, thr):
+    """devIoU for proposals ra and rb (row indices) of the contiguous buffer `flat` (rows of 77 floats)."""
     start = max(sa, sb)
     end = min(min(ea, eb), N_OFFSETS - 1)
     if end < start:
         return False
-    d = np.abs(a[5 + start:6 + end] - b[5 + start:6 + end]).astype(F32)
+    # The kernel reads a[5 + i] through a raw pointer. For valid outputs 0 <= start <= end <= 71, so this stays inside
+    # the proposal's 72 offsets. start < 0 only arises from out-of-range outputs (start_y < 0); the pointer then reads
+    # the floats just before the offsets (below i = -5, the previous proposal), reproduced here via the flat buffer
+    # (clipped at its start, where the kernel's read would be undefined).
+    i = np.arange(start, end + 1) + 5
+    d = np.abs(flat[np.clip(77 * ra + i, 0, None)] - flat[np.clip(77 * rb + i, 0, None)]).astype(F32)
     dist = np.cumsum(d, dtype=F32)[-1]                                   # sequential float32 sum, as the kernel loop
     return bool(dist < F32(F32(thr) * F32(end - start + 1)))
 
@@ -35,7 +41,9 @@ def _overlaps(a, b, sa, ea, sb, eb, thr):
 def nms(boxes, scores, overlap, top_k):
     dev = boxes.device
     idx = torch.sort(scores, 0, descending=True)[1].cpu().numpy()      # nms.cpp: scores.sort(0, true)
-    b = boxes.detach().to(torch.float32).cpu().numpy()
+    b = np.ascontiguousarray(boxes.detach().to(torch.float32).cpu().numpy())
+    assert b.shape[1] == 5 + N_OFFSETS, b.shape
+    flat = b.reshape(-1)
     n = len(idx)
     spans = [_span(b[i]) for i in range(len(b))]
     removed = np.zeros(n, bool)
@@ -49,7 +57,7 @@ def nms(boxes, scores, overlap, top_k):
             jj = idx[j]
             if not removed[j]:
                 sb, eb = spans[jj]
-                if _overlaps(b[ii], b[jj], sa, ea, sb, eb, overlap):
+                if _overlaps(flat, ii, jj, sa, ea, sb, eb, overlap):
                     removed[j] = True; parent[jj] = len(keep)
         parent[ii] = len(keep)
         if len(keep) == top_k:

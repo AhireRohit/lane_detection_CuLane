@@ -117,7 +117,9 @@ def export():
                       output_names=list(OUTPUTS), do_constant_folding=True)
     onnx.checker.check_model(str(ONNX['onnx_fp32']))
     prep = OUT / 'clrernet_fp32_prep.onnx'
-    quant_pre_process(str(ONNX['onnx_fp32']), str(prep))
+    # skip_optimization keeps the exported node names (v1 optimized the graph first, which renamed every node, so the
+    # int8_bbneck head exclusion matched nothing and both INT8 variants were identical: results/onnx/export_v1.json)
+    quant_pre_process(str(ONNX['onnx_fp32']), str(prep), skip_optimization=True)
 
     calib = image_list('train_gt.txt', k=max(1, sum(1 for _ in open(D / 'list/train_gt.txt')) // 300), limit=300)
 
@@ -128,7 +130,8 @@ def export():
             r = next(self.it, None)
             return None if r is None else {'img': pre(cv2.imread(str(D / r))).numpy()}
 
-    head_nodes = [n.name for n in onnx.load(str(prep)).graph.node if n.name.startswith('/m/bbox_head')]
+    head_nodes = [n.name for n in onnx.load(str(prep)).graph.node if 'bbox_head' in n.name]
+    assert head_nodes, 'no lane-head nodes found to exclude'
     for v, excl in (('int8_all', []), ('int8_bbneck', head_nodes)):
         quantize_static(str(prep), str(ONNX[v]), Reader(), quant_format=QuantFormat.QDQ, per_channel=True,
                         activation_type=QuantType.QInt8, weight_type=QuantType.QInt8, nodes_to_exclude=excl)

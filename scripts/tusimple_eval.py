@@ -103,12 +103,37 @@ def canvas_to_src(lane):
 def write_lines(path, lanes_xs, ys):
     path.parent.mkdir(parents=True, exist_ok=True)
     rows = [' '.join(f'{x:.2f} {y}' for x, y in sorted(zip(xs, ys), key=lambda t: -t[1]) if x >= 0) for xs in lanes_xs]
-    path.write_text('\n'.join(r for r in rows if r.count(' ') >= 3) + '\n')
+    rows = [r for r in rows if r.count(' ') >= 3]
+    # no lanes -> empty file, as the official CULane writer does (v1 wrote a lone newline, which the C++ evaluator
+    # counts as one lane on that side; the TuSimple-metric numbers never used these files)
+    path.write_text('\n'.join(rows) + '\n' if rows else '')
+
+
+def rescore(out):
+    """Rewrite the lane files from the saved predictions (pred_<variant>.json) and check the TuSimple metric is
+    unchanged; the wrapper then re-runs the CULane evaluator. No inference."""
+    labels = {}
+    for l in open(T / 'test_label_available.json'):
+        if l.strip():
+            lab = truncate_gt(json.loads(l)); labels[lab['raw_file']] = lab
+    res = json.loads((out / 'tusimple_metrics.json').read_text())
+    for lab in labels.values():
+        write_lines(out / 'gt_lines' / (lab['raw_file'][:-3] + 'lines.txt'), lab['lanes'], lab['h_samples'])
+    for v in res['results']:
+        preds = {}
+        for l in open(out / f'pred_{v}.json'):
+            d = json.loads(l); preds[d['raw_file']] = d['lanes']
+        new = score(preds, list(labels.values()))
+        assert abs(new['f1'] - res['results'][v]['f1']) < 1e-9, (v, new['f1'], res['results'][v]['f1'])
+        for r, lanes in preds.items():
+            write_lines(out / v / (r[:-3] + 'lines.txt'), lanes, labels[r]['h_samples'])
+    print('RESCORED', out)
 
 
 def main():
     model, out, clips = sys.argv[1], Path(sys.argv[2]), '--clips' in sys.argv
     out.mkdir(parents=True, exist_ok=True)
+    if '--rescore' in sys.argv: return rescore(out)
     import torch
     from benchmark_speed import build_scnn, build_ufld, build_clr
     if clips: import temporal_ablation as ta   # scipy; only the tracker needs it
