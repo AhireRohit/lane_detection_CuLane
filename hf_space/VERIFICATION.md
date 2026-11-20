@@ -27,8 +27,8 @@ The differences are floating-point rounding, about a thousandth of a pixel.
 
 ## 3. Robust fine-tune checkpoint shipped in the demo
 
-- `weights/clrernet_culane_dla34_robust_ft.pth` is the seed-0 corruption fine-tune (report §7.1), reduced to the `state_dict` that `mmdet` loads.
-- All 305 tensors are bit-identical to the training checkpoint (job 74331). sha256 `428c210d9942636ef9a46c1bccc6f844f20791de09c9ceddb8cc498d91649a82`.
+- `weights/clrernet_culane_dla34_robust_ft.pth` is the seed-0 corruption fine-tune (report §7.1), reduced to the `state_dict` that `mmdet` loads plus `dataset_meta`. The training config is dropped because it contains cluster paths.
+- All 305 tensors are bit-identical to the training checkpoint (jobs 74331 and 74341). sha256 `a90b78d306a510ee4cd775239c6a68e0eb01a0aa163a849daf03e480abcfa174`.
 
 ## 4. Demo code vs the cluster app
 

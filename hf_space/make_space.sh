@@ -14,7 +14,8 @@ done
 cp "$REPO"/config/{sources.json,checkpoints.sha256,culane_res34_cluster.py} "$S/benchmark_culane/config/"
 cp "$CK" "$S/weights/clrernet_culane_dla34_robust_ft.pth"
 (cd "$S" && sha256sum weights/clrernet_culane_dla34_robust_ft.pth > weights/SHA256SUMS)
-grep -q '428c210d9942636ef9a46c1bccc6f844f20791de09c9ceddb8cc498d91649a82' "$S/weights/SHA256SUMS" \
-  || { echo "robust checkpoint is not the verified export (sha256 428c210d...)"; exit 2; }
-printf '*.pth filter=lfs diff=lfs merge=lfs -text\n' > "$S/.gitattributes"
+grep -q 'a90b78d306a510ee4cd775239c6a68e0eb01a0aa163a849daf03e480abcfa174' "$S/weights/SHA256SUMS" \
+  || { echo "robust checkpoint is not the verified export (sha256 a90b78d3...)"; exit 2; }
+# keep the Space's own LFS rules; only add *.pth if missing
+grep -qF '*.pth filter=lfs' "$S/.gitattributes" 2>/dev/null || printf '*.pth filter=lfs diff=lfs merge=lfs -text\n' >> "$S/.gitattributes"
 echo "Space folder ready: $S  (commit and push it to Hugging Face)"
