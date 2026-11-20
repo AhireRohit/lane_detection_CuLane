@@ -18,6 +18,9 @@ import torch
 from common import B, D, checkpoint, vendor, test_images
 
 WARMUP, MEASURE = 50, 200
+# LANE_DEVICE=cpu runs the same builders without a GPU (Hugging Face Space demo; equivalence checked by
+# scripts/verify_cpu.py). Every benchmark number in reports/ used the default, cuda.
+DEV = os.environ.get('LANE_DEVICE', 'cuda')
 
 
 def build_scnn():
@@ -28,13 +31,13 @@ def build_scnn():
     from scnn_infer import extract_state
     m = SCNN((800, 288), pretrained=False)
     m.load_state_dict(extract_state(torch.load(str(checkpoint('scnn')), map_location='cpu', weights_only=False)), strict=True)
-    m = m.cuda().eval()
+    m = m.to(DEV).eval()
     mean = np.array([.485, .456, .406], np.float32); std = np.array([.229, .224, .225], np.float32)
 
     def pre(img):
         rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         x = (cv2.resize(rgb, (800, 288), interpolation=cv2.INTER_LINEAR).astype(np.float32) / 255 - mean) / std
-        return torch.from_numpy(x.transpose(2, 0, 1).copy()).unsqueeze(0).cuda()
+        return torch.from_numpy(x.transpose(2, 0, 1).copy()).unsqueeze(0).to(DEV)
 
     def fwd(t):
         return m(t)[:2]
@@ -63,7 +66,14 @@ def build_ufld(run):
     import torchvision.transforms as T
     sys.argv = ['benchmark_speed.py', str(B / 'config/culane_res34_cluster.py'), '--test_model', str(checkpoint('ufldv2'))]
     _, cfg = merge_config()
-    model = get_model(cfg)
+    if DEV == 'cuda':
+        model = get_model(cfg)
+    else:   # vendor get_model() calls .cuda(); build the same network on CPU (backbone init is overwritten by the strict load)
+        from model.model_culane import parsingNet
+        model = parsingNet(pretrained=False, backbone=cfg.backbone, num_grid_row=cfg.num_cell_row, num_cls_row=cfg.num_row,
+                           num_grid_col=cfg.num_cell_col, num_cls_col=cfg.num_col, num_lane_on_row=cfg.num_lanes,
+                           num_lane_on_col=cfg.num_lanes, use_aux=cfg.use_aux, input_height=cfg.train_height,
+                           input_width=cfg.train_width, fc_norm=cfg.fc_norm)
     raw = torch.load(str(checkpoint('ufldv2')), map_location='cpu', weights_only=False)
     model.load_state_dict({k.removeprefix('module.'): v for k, v in raw['model'].items()}, strict=True)
     model.eval()
@@ -72,7 +82,7 @@ def build_ufld(run):
     ra, ca = cfg.row_anchor, cfg.col_anchor
 
     def pre(img):
-        return tf(Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)))[:, -cfg.train_height:, :].unsqueeze(0).cuda()
+        return tf(Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)))[:, -cfg.train_height:, :].unsqueeze(0).to(DEV)
 
     def fwd(x):
         return model(x)
@@ -133,12 +143,14 @@ def build_ufld(run):
 
 def build_clr(run):
     repo = vendor('clrernet'); os.chdir(repo); sys.path.insert(0, str(repo))
+    if DEV != 'cuda':   # the compiled lane-NMS op is CUDA-only; use the exact CPU port
+        import nms_cpu; sys.modules['nms'] = nms_cpu
     from mmdet.apis import init_detector
     from libs.api.inference import get_prediction
     from libs.datasets.pipelines import Compose
     # CLR_CKPT (optional) evaluates a fine-tuned checkpoint with the same verified pipeline; default = released EMA weights.
     ckpt = os.environ.get('CLR_CKPT') or str(checkpoint('clrernet'))
-    model = init_detector('configs/clrernet/culane/clrernet_culane_dla34_ema.py', ckpt, device='cuda:0')
+    model = init_detector('configs/clrernet/culane/clrernet_culane_dla34_ema.py', ckpt, device='cuda:0' if DEV == 'cuda' else 'cpu')
     model.bbox_head.test_cfg.as_lanes = False
     pipeline = Compose(model.cfg.test_dataloader.dataset.pipeline)
     head = model.bbox_head

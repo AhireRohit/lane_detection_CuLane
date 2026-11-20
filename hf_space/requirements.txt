@@ -1,0 +1,29 @@
+# CPU environment for the Hugging Face Space (Python 3.10). Versions match the cluster venvs
+# (reports/environment_manifest.json) except torch: MMCV 2.1.0 CPU wheels exist for torch 2.1, not 2.3.
+# The CPU path is checked against the GPU predictions by scripts/verify_cpu.py (see hf_space/VERIFICATION.md).
+--extra-index-url https://download.pytorch.org/whl/cpu
+--find-links https://download.openmmlab.com/mmcv/dist/cpu/torch2.1/index.html
+torch==2.1.2+cpu
+torchvision==0.16.2+cpu
+mmcv==2.1.0
+mmengine==0.10.4
+mmdet==3.3.0
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+scipy==1.13.1
+Pillow==10.3.0
+albumentations==0.4.6
+imgaug==0.4.0
+shapely==2.1.2
+scikit-image==0.25.2
+pycocotools==2.0.8
+terminaltables==3.1.10
+addict==2.4.0
+pathspec==0.12.1
+imagesize==1.4.1
+ujson==5.10.0
+scikit-learn==1.5.2
+tensorboard==2.17.1
+tqdm==4.66.5
+streamlit==1.40.2
+gdown==5.2.0

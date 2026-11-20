@@ -1,0 +1,18 @@
+# GPU check: CPU lane-NMS port vs the CUDA op on identical CLRerNet proposals.
+universe = docker
+docker_image = pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel
+executable = /bin/bash
+arguments = /path/to/Lane_Detection/benchmark_culane/scripts/verify_nms_job.sh 2000
+initialdir = /path/to/Lane_Detection/benchmark_culane
+output = /path/to/Lane_Detection/benchmark_culane/logs/verify_nms.$(ClusterId).out
+error = /path/to/Lane_Detection/benchmark_culane/logs/verify_nms.$(ClusterId).err
+log = /path/to/Lane_Detection/benchmark_culane/logs/verify_nms.$(ClusterId).log
+should_transfer_files = NO
+request_GPUs = 1
+request_cpus = 4
+request_memory = 16G
+request_disk = 10G
+requirements = UidDomain == "cs.uni-saarland.de"
++WantGPUHomeMounted = true
++WantScratchMounted = true
+queue 1
