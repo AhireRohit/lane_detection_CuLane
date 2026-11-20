@@ -150,7 +150,11 @@ def build_clr(run):
     from libs.datasets.pipelines import Compose
     # CLR_CKPT (optional) evaluates a fine-tuned checkpoint with the same verified pipeline; default = released EMA weights.
     ckpt = os.environ.get('CLR_CKPT') or str(checkpoint('clrernet'))
-    model = init_detector('configs/clrernet/culane/clrernet_culane_dla34_ema.py', ckpt, device='cuda:0' if DEV == 'cuda' else 'cpu')
+    # init_detector reads the CULane test list only to fetch a colour palette (palette='none'). Where no dataset exists
+    # (the public demo) pass palette='random' instead: dataset_meta/palette only affect visualisation, not predictions.
+    palette = 'none' if (repo / 'dataset/culane/list/test.txt').is_file() else 'random'
+    model = init_detector('configs/clrernet/culane/clrernet_culane_dla34_ema.py', ckpt, palette=palette,
+                          device='cuda:0' if DEV == 'cuda' else 'cpu')
     model.bbox_head.test_cfg.as_lanes = False
     pipeline = Compose(model.cfg.test_dataloader.dataset.pipeline)
     head = model.bbox_head
