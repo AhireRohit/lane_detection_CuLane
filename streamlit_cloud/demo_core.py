@@ -24,6 +24,7 @@ MODELS = {   # key: (label, note, checkpoint files it needs)
     'ufldv2': ('UFLDv2 (ResNet34)', 'Ultra-Fast-Lane-Detection v2: CULane test F1 75.86 (no TTA).', ['ufldv2/culane_res34.pth']),
     'scnn': ('SCNN (VGG16)', 'Classic baseline: CULane test F1 70.07. Slowest on CPU.', ['scnn/vgg_SCNN_DULR_w9.pth']),
 }
+API = 2   # bump with any interface change; streamlit_app.py reloads this module when it differs
 MAX_WORKERS = int(os.environ.get('LANE_MAX_WORKERS', 2))
 SAMPLE_SRC = REPO / 'vendors' / 'ufldv2' / 'example.mp4'   # ships with the pinned UFLDv2 repo (MIT); fetched, not redistributed
 SAMPLES = {'sample_clip.mp4': 'Sample video (highway, 10 s)', 'sample_frame.jpg': 'Sample image (one frame of it)'}

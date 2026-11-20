@@ -3,10 +3,14 @@
 Pick models, upload a dashcam image or short video (or use a built-in sample), click Generate. Logic lives in
 demo_core.py; inference is the benchmark's own verified code running on CPU, in persistent per-model workers.
 """
-import threading
+import importlib, threading
 from pathlib import Path
 import streamlit as st
 import demo_core as core
+
+API = 2   # must match demo_core.API; on a code update Streamlit re-runs this script but keeps the old imported module
+if getattr(core, 'API', 0) != API:
+    core = importlib.reload(core)
 
 st.set_page_config(page_title='Lane Detection Demo', page_icon='🛣️', layout='wide')
 st.session_state.setdefault('runs', [])
