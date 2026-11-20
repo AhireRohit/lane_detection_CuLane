@@ -9,7 +9,7 @@ python_version: "3.10"
 app_file: app.py
 pinned: false
 license: other
-short_description: SCNN, UFLDv2, CLRerNet and a robust CLRerNet fine-tune on CPU
+short_description: Lane detection: SCNN, UFLDv2, CLRerNet + robust fine-tune
 ---
 
 # Lane detection demo
