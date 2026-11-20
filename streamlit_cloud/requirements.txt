@@ -3,3 +3,5 @@
 # first start, because torch 2.1.2 / MMCV 2.1.0 have no wheels for newer Pythons.
 streamlit==1.50.0
 uv>=0.8
+# Fallback ffmpeg (static binary) in case the platform skips packages.txt
+imageio-ffmpeg==0.6.0

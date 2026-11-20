@@ -8,7 +8,7 @@ from pathlib import Path
 import streamlit as st
 import demo_core as core
 
-API = 2   # must match demo_core.API; on a code update Streamlit re-runs this script but keeps the old imported module
+API = 3   # must match demo_core.API; on a code update Streamlit re-runs this script but keeps the old imported module
 if getattr(core, 'API', 0) != API:
     core = importlib.reload(core)
 
